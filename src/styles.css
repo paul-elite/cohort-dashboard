@@ -108,9 +108,9 @@ a { color: var(--blue-ink); }
 .grip { width: 24px; height: 24px; margin-right: -4px; display: grid; place-items: center; cursor: grab; }
 
 /* Main column -------------------------------------------------------------- */
-/* Side margins: up to 200px each, shrinking so the cards never get narrower than 560px. */
+/* Side margins: up to 100px each, shrinking so the cards never get narrower than 560px. */
 .main {
-  min-width: 0; padding: var(--top) clamp(24px, calc((100% - 560px) / 2), 200px) 48px;
+  min-width: 0; padding: var(--top) clamp(24px, calc((100% - 560px) / 2), 100px) 48px;
   display: flex; flex-direction: column; gap: 24px; container-type: inline-size;
 }
 .toolbar { position: relative; display: flex; align-items: center; gap: 12px; height: var(--row); }
@@ -121,8 +121,23 @@ a { color: var(--blue-ink); }
 .back:disabled:hover { background: linear-gradient(180deg, #ffffff 0%, #f3f3f7 100%); }
 @media (min-width: 928px) and (max-width: 1280px), (min-width: 1440px) {
   .back { position: absolute; right: calc(100% + 16px); top: 2px; }
-  .main { padding-left: clamp(72px, calc((100% - 560px) / 2), 200px); padding-right: clamp(72px, calc((100% - 560px) / 2), 200px); }
+  .main { padding-left: clamp(72px, calc((100% - 560px) / 2), 100px); padding-right: clamp(72px, calc((100% - 560px) / 2), 100px); }
 }
+
+/* Per-column scrolling: the page itself never scrolls on desktop.
+   Three columns: sidebar, main and panel each scroll on their own.
+   Two columns (801–1280px): sidebar stays put, main + panel scroll together. */
+@media (min-width: 801px) {
+  html, body { height: 100%; overflow: hidden; }
+  .app { height: 100vh; min-height: 0; overflow-y: auto; }
+}
+@media (min-width: 1281px) {
+  .app { overflow: hidden; }
+  .main { height: 100vh; overflow-y: auto; }
+}
+.sidebar, .main, .panel, .app, .modal-body { scrollbar-width: thin; scrollbar-color: #d6d6e0 transparent; }
+.sidebar::-webkit-scrollbar, .main::-webkit-scrollbar, .panel::-webkit-scrollbar, .app::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .panel::-webkit-scrollbar-thumb, .app::-webkit-scrollbar-thumb { background: #d6d6e0; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 .glass {
   background: linear-gradient(180deg, #ffffff 0%, #f3f3f7 100%);
   border: 1px solid rgba(25, 26, 44, 0.09);
@@ -158,10 +173,11 @@ button.glass:hover, a.glass:hover { background: linear-gradient(180deg, #ffffff 
 
 /* Calendar ------------------------------------------------------------------ */
 .cal { overflow: hidden; }
-.cal-nav { display: flex; gap: 8px; align-items: center; }
-.cal-nav .seg { height: 32px; }
-.cal-nav .seg button { width: 34px; height: 26px; }
-.today-btn { height: 32px; padding: 0 12px; border-radius: 999px; font-size: var(--fs-caption); font-weight: 500; color: var(--text-1); cursor: pointer; }
+/* Month control: [ ‹ | Today | › ] as one segmented pill on the right edge */
+.seg.cal-nav { height: 34px; }
+.cal-nav button { width: 34px; height: 28px; }
+.cal-nav .today-btn { width: auto; padding: 0 12px; font-size: var(--fs-caption); font-weight: 500; }
+.cal-nav button:hover { background: rgba(25, 26, 44, 0.05); }
 .grid7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .dow { padding: 0 10px 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: var(--text-3); text-align: right; line-height: 16px; }
 .cell {

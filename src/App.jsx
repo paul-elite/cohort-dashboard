@@ -122,13 +122,12 @@ function Calendar({ big, todayKey, onOpenDay }) {
       <Rings />
       <div className="card-head">
         <h2 id="cal-h">{MONTHS[ym.m]}</h2>
-        <div className="cal-nav">
-          <button type="button" className="glass today-btn" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>Today</button>
-          <div className="glass seg">
-            <button type="button" aria-label="Previous month" onClick={() => step(-1)}><Chevron dir="left" size={16} /></button>
-            <span className="div" aria-hidden="true" />
-            <button type="button" aria-label="Next month" onClick={() => step(1)}><Chevron dir="right" size={16} /></button>
-          </div>
+        <div className="glass seg cal-nav">
+          <button type="button" aria-label="Previous month" onClick={() => step(-1)}><Chevron dir="left" size={16} /></button>
+          <span className="div" aria-hidden="true" />
+          <button type="button" className="today-btn" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>Today</button>
+          <span className="div" aria-hidden="true" />
+          <button type="button" aria-label="Next month" onClick={() => step(1)}><Chevron dir="right" size={16} /></button>
         </div>
       </div>
       <div className="grid7">
