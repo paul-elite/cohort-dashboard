@@ -110,7 +110,11 @@ a { color: var(--blue-ink); }
 .grip { width: 24px; height: 24px; margin-right: -4px; display: grid; place-items: center; cursor: grab; }
 
 /* Main column -------------------------------------------------------------- */
-.main { min-width: 0; padding: var(--top) 24px 48px; display: flex; flex-direction: column; gap: 24px; container-type: inline-size; }
+/* Side margins: up to 200px each, shrinking so the cards never get narrower than 560px. */
+.main {
+  min-width: 0; padding: var(--top) clamp(24px, calc((100% - 560px) / 2), 200px) 48px;
+  display: flex; flex-direction: column; gap: 24px; container-type: inline-size;
+}
 .toolbar { display: flex; align-items: center; gap: 12px; height: var(--row); }
 .glass {
   background: linear-gradient(180deg, #ffffff 0%, #f3f3f7 100%);
