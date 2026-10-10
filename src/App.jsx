@@ -11,11 +11,11 @@ const longDate = (k) => fromKey(k).toLocaleDateString('en-US', { weekday: 'long'
 
 // Figma exports (cohort page). Width/height are each file's pixel size.
 const ICONS = {
-  recording: { src: '/icons/recording.png', w: 60, h: 83 },
-  font: { src: '/icons/font.png', w: 69, h: 86 },
-  audio: { src: '/icons/audio.png', w: 60, h: 83 },
-  zip: { src: '/icons/zip.png', w: 70, h: 95 },
-  book: { src: '/icons/book.png', w: 80, h: 101 },
+  recording: { src: '/icons/recording.webp', w: 60, h: 83 },
+  font: { src: '/icons/font.webp', w: 69, h: 86 },
+  audio: { src: '/icons/audio.webp', w: 60, h: 83 },
+  zip: { src: '/icons/zip.webp', w: 70, h: 95 },
+  book: { src: '/icons/book.webp', w: 80, h: 101 },
 };
 
 function load(key, fallback) {
@@ -277,7 +277,7 @@ function SessionPanel({ todayKey, onOpenDay }) {
           ? <div className="live-now"><VideoIcon />Live Now</div>
           : <div className="upcoming-when">{longDate(LIVE_SESSION.date)}</div>}
         <div className="meet">
-          <span className="logo-tile"><img src="/icons/google-meet.png" width="32" height="27" alt="" /></span>
+          <span className="logo-tile"><img src="/icons/google-meet.webp" width="32" height="27" alt="" /></span>
           <div className="txt">
             <div className="t1">Google Meet Session</div>
             <div className="t2">Online Event</div>
