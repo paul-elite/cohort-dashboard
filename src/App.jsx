@@ -448,7 +448,7 @@ function DetailPanel({ item, onClose, onSelect }) {
         <button type="button" className="glass back" aria-label="Close details" onClick={onClose}><Icon icon={Cancel01Icon} size={18} /></button>
         <span className="eyebrow">Resource details</span>
       </div>
-      <div className="detail-stage"><FileArt icon={item.icon} /></div>
+      <div className="detail-art"><FileArt icon={item.icon} /></div>
       <div className="m-head">
         <span className="kind-icon"><Icon icon={KIND_ICONS[item.icon] || FileZipIcon} size={22} /></span>
         <div>
