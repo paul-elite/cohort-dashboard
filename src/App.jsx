@@ -172,7 +172,7 @@ function FileArt({ icon }) {
   return <img src={i.src} width={i.w} height={i.h} alt="" />;
 }
 
-function Resources({ query, onOpen }) {
+function Resources({ query, onOpen, selected }) {
   const q = query.trim().toLowerCase();
   const items = RESOURCES.filter((r) => !q || r.name.toLowerCase().includes(q));
   return (
@@ -180,7 +180,7 @@ function Resources({ query, onOpen }) {
       <div className="card-head"><h2 id="res-h">Resources</h2></div>
       <div className="files">
         {items.map((f) => (
-          <button type="button" key={f.name} className="file" onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
+          <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
             <span className="art"><FileArt icon={f.icon} /></span>
             <span className="name">{f.name}</span>
             <span className="when">{f.when}</span>
@@ -367,30 +367,52 @@ function Row({ icon, label, children }) {
   );
 }
 
-function ResourceModal({ item, onClose }) {
+/* Resource details: shown in the right-hand panel when a resource icon is clicked */
+function DetailPanel({ item, onClose, onSelect }) {
   const [copied, copy] = useCopy();
+  const ref = useRef(null);
   const link = item.href && item.href !== '#' ? item.href : location.origin + '/#' + encodeURIComponent(item.name);
+  const others = RESOURCES.filter((r) => r.name !== item.name);
+  useEffect(() => {
+    ref.current?.scrollTo?.({ top: 0 });
+    if (window.innerWidth <= 1280) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [item]);
   return (
-    <Modal title={item.name} onClose={onClose} footer={<>
-      <button type="button" className="btn ghost" onClick={() => copy(link)}><Icon icon={copied ? Tick02Icon : Link04Icon} size={18} />{copied ? 'Copied' : 'Copy link'}</button>
-      <span className="spacer" />
-      <button type="button" className="glass btn" onClick={onClose}>Close</button>
-      <a className="btn primary" href={item.href} target="_blank" rel="noreferrer">Open<Icon icon={ArrowUpRight01Icon} size={18} bold /></a>
-    </>}>
-      <div className="stage"><FileArt icon={item.icon} /></div>
+    <aside className="panel detail" aria-labelledby="detail-h" ref={ref} key={item.name}>
+      <div className="panel-top">
+        <button type="button" className="glass back" aria-label="Close details" onClick={onClose}><Icon icon={Cancel01Icon} size={18} /></button>
+        <span className="eyebrow">Resource details</span>
+      </div>
+      <div className="detail-stage"><FileArt icon={item.icon} /></div>
       <div className="m-head">
         <span className="kind-icon"><Icon icon={KIND_ICONS[item.icon] || FileZipIcon} size={22} /></span>
         <div>
-          <h3>{item.name}</h3>
+          <h2 id="detail-h">{item.name}</h2>
           <p>Shared in DesignTales</p>
         </div>
       </div>
       <ul className="rows">
         <Row icon={KIND_ICONS[item.icon] || FileZipIcon} label="Kind">{item.kind}</Row>
         <Row icon={Clock01Icon} label="Added">{item.when}</Row>
+        <Row icon={Mortarboard01Icon} label="Cohort">DesignTales</Row>
         <Row icon={UserMultiple02Icon} label="Shared with">Everyone in the cohort</Row>
       </ul>
-    </Modal>
+      <div className="detail-actions">
+        <button type="button" className="glass btn" onClick={() => copy(link)}><Icon icon={copied ? Tick02Icon : Link04Icon} size={18} />{copied ? 'Copied' : 'Copy link'}</button>
+        <a className="btn primary" href={item.href} target="_blank" rel="noreferrer">Open<Icon icon={ArrowUpRight01Icon} size={18} bold /></a>
+      </div>
+      <div className="coming">
+        <h3 className="eyebrow">More resources</h3>
+        {others.map((r) => (
+          <button type="button" key={r.name} onClick={() => onSelect(r)}>
+            <span className="mini-kind"><Icon icon={KIND_ICONS[r.icon] || FileZipIcon} size={18} /></span>
+            <span className="l">{r.name}</span>
+            <span className="d">{r.when}</span>
+            <Icon icon={ArrowRight01Icon} size={16} className="go" />
+          </button>
+        ))}
+      </div>
+    </aside>
   );
 }
 
@@ -454,13 +476,14 @@ export default function App() {
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
   const [layoutOpen, setLayoutOpen] = useState(true);
-  const [modal, setModal] = useState(null); // { type: 'resource', item } | { type: 'day', key }
+  const [modal, setModal] = useState(null); // { type: 'day', key }
 
   useEffect(() => save('cohort-todos', todos), [todos]);
   useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) { e.preventDefault(); document.getElementById('search')?.focus(); }
+      if (e.key === 'Escape' && !document.querySelector('.scrim') && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) setDetail(null);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -476,7 +499,8 @@ export default function App() {
   });
   const visible = (k) => (view === 'overview' ? show[k] : view === k);
   const openDay = (key) => setModal({ type: 'day', key });
-  const openResource = (item) => setModal({ type: 'resource', item });
+  const [detail, setDetail] = useState(null);
+  const openResource = (item) => setDetail((cur) => (cur && cur.name === item.name ? null : item));
   const closeModal = () => setModal(null);
 
   const open = todos.filter((t) => !t.done).length;
@@ -540,15 +564,16 @@ export default function App() {
 
         <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
           {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} />}
-          {visible('resources') && <Resources query={query} onOpen={openResource} />}
+          {visible('resources') && <Resources query={query} onOpen={openResource} selected={detail?.name} />}
           {visible('todos') && <Todos todos={todos} setTodos={setTodos} query={query} />}
           {visible('tools') && <Tools />}
         </div>
       </main>
 
-      <SessionPanel todayKey={todayKey} onOpenDay={openDay} />
+      {detail
+        ? <DetailPanel item={detail} onClose={() => setDetail(null)} onSelect={setDetail} />
+        : <SessionPanel todayKey={todayKey} onOpenDay={openDay} />}
 
-      {modal?.type === 'resource' && <ResourceModal item={modal.item} onClose={closeModal} />}
       {modal?.type === 'day' && <DayModal dayKey={modal.key} onClose={closeModal} onOpenDay={openDay} />}
     </div>
   );
