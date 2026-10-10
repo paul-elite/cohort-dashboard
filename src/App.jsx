@@ -174,59 +174,22 @@ function FileArt({ icon }) {
   return <img src={i.src} width={i.w} height={i.h} alt="" />;
 }
 
-/* Resources: a coloured folder with category tabs (like a filing divider) */
-const FOLDER_TABS = [
-  { id: 'all', label: 'All', color: '#0A9BFF' },
-  { id: 'recording', label: 'Video', color: '#12A194' },
-  { id: 'font', label: 'Fonts', color: '#0E9A45' },
-  { id: 'audio', label: 'Audio', color: '#A3C73A' },
-  { id: 'zip', label: 'Archives', color: '#F5DD14' },
-  { id: 'book', label: 'Books', color: '#FF9A16' },
-];
 function Resources({ query, onOpen, selected }) {
-  const [tab, setTab] = useState(() => load('cohort-folder', 'all'));
-  useEffect(() => save('cohort-folder', tab), [tab]);
   const q = query.trim().toLowerCase();
-  const index = Math.max(0, FOLDER_TABS.findIndex((t) => t.id === tab));
-  const active = FOLDER_TABS[index];
-  const items = RESOURCES.filter((r) => (tab === 'all' || r.icon === tab) && (!q || r.name.toLowerCase().includes(q)));
-  const count = (id) => RESOURCES.filter((r) => id === 'all' || r.icon === id).length;
-  const onKey = (e) => {
-    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!d) return;
-    e.preventDefault();
-    const next = FOLDER_TABS[(index + d + FOLDER_TABS.length) % FOLDER_TABS.length];
-    setTab(next.id);
-    document.getElementById('tab-' + next.id)?.focus();
-  };
+  const items = RESOURCES.filter((r) => !q || r.name.toLowerCase().includes(q));
   return (
-    <section className={'card res folder' + (index === 0 ? ' first' : '')} style={{ '--folder': active.color }} aria-labelledby="res-h">
-      <div className="tabs" role="tablist" aria-label="Resource categories" onKeyDown={onKey}>
-        {FOLDER_TABS.map((t, i) => (
-          <button key={t.id} id={'tab-' + t.id} type="button" role="tab" aria-selected={t.id === tab} tabIndex={t.id === tab ? 0 : -1}
-            className={'tab' + (t.id === tab ? ' on' : '')} style={{ '--tab': t.color, zIndex: t.id === tab ? 20 : FOLDER_TABS.length - i }}
-            onClick={() => setTab(t.id)}>
-            <span className="tab-no">{String(i + 1).padStart(2, '0')}</span>
-            <span className="tab-label">{t.label}</span>
+    <section className="card res" aria-labelledby="res-h">
+      <div className="card-head"><h2 id="res-h">Resources</h2></div>
+      <div className="files">
+        {items.map((f) => (
+          <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
+            <span className="art"><FileArt icon={f.icon} /></span>
+            <span className="name">{f.name}</span>
+            <span className="when">{f.when}</span>
           </button>
         ))}
       </div>
-      <div className="folder-body" role="tabpanel" aria-labelledby={'tab-' + active.id}>
-        <div className="folder-head">
-          <h2 id="res-h">Resources:<br />Section {String(index + 1).padStart(2, '0')}<br />{active.label}</h2>
-          <span className="folder-count">{count(active.id)} {count(active.id) === 1 ? 'file' : 'files'}</span>
-        </div>
-        <div className="files">
-          {items.map((f) => (
-            <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
-              <span className="art"><FileArt icon={f.icon} /></span>
-              <span className="name">{f.name}</span>
-              <span className="when">{f.when}</span>
-            </button>
-          ))}
-        </div>
-        {items.length === 0 && <p className="empty">{q ? 'No ' + active.label.toLowerCase() + ' match your search.' : 'Nothing in this section yet.'}</p>}
-      </div>
+      {items.length === 0 && <p className="empty">No resources match your search.</p>}
     </section>
   );
 }

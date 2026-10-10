@@ -220,38 +220,11 @@ kbd { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; line-
 .tag { max-width: 100%; font-size: 11px; font-weight: 500; line-height: 16px; color: #fff; padding: 0 6px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Resources ------------------------------------------------------------------ */
-/* Folder with category tabs */
-.card.folder { background: transparent; box-shadow: none; display: flex; flex-direction: column; min-height: 420px; }
-.tabs { display: flex; align-items: flex-end; height: 30px; padding-right: 16px; overflow: hidden; flex: none; }
-.tab {
-  position: relative; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px 0 12px; margin-right: 14px;
-  border: 0; border-radius: 5px 0 0 0; background: var(--tab); color: #10131c; cursor: pointer;
-  font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; line-height: 1; white-space: nowrap;
-  transition: height 0.15s;
+.res { margin-top: 12px; padding-top: 13px; padding-bottom: 16px; } /* 12px for the folder tab + 13px = the paper's ring row, so titles line up */
+.res::before {
+  content: ""; position: absolute; left: 0; top: -12px; width: 96px; height: 20px; border-radius: 6px 6px 0 0;
+  background: var(--card); box-shadow: 0 -1px 0 var(--line), -1px 0 0 var(--line), 1px 0 0 var(--line);
 }
-.tab::after {
-  content: ""; position: absolute; top: 0; right: -14px; width: 22px; height: 100%; background: inherit;
-  border-radius: 0 5px 0 0; transform: skewX(28deg); transform-origin: bottom left; z-index: -1;
-}
-.tab:hover { height: 26px; }
-.tab.on { height: 30px; }
-.tab .tab-label { display: none; }
-.tab.on .tab-label, .tab:hover .tab-label { display: inline; }
-.tab:focus-visible { outline: 2px solid #10131c; outline-offset: 2px; }
-.folder-body {
-  flex: 1; display: flex; flex-direction: column; background: var(--folder); color: #10131c;
-  border-radius: 0 6px 6px 6px; padding: 28px var(--pad) 20px; transition: background-color 0.2s;
-}
-.folder:not(.first) .folder-body { border-radius: 6px; }
-.folder-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-top: 14px; margin-bottom: 20px; border-top: 1px dotted rgba(16, 19, 28, 0.45); }
-.folder-head h2 { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-weight: 400; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.01em; color: #10131c; }
-.folder-count { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; text-transform: uppercase; color: rgba(16, 19, 28, 0.75); white-space: nowrap; }
-.folder .files { padding: 0; margin: 0 -6px; }
-.folder .file:hover { background: rgba(255, 255, 255, 0.28); }
-.folder .file.selected { background: rgba(255, 255, 255, 0.42); box-shadow: inset 0 0 0 0.5px rgba(16, 19, 28, 0.55); }
-.folder .file .name, .folder .file.selected .name { color: #10131c; }
-.folder .file .when { color: rgba(16, 19, 28, 0.72); }
-.folder .empty { padding: 0; color: rgba(16, 19, 28, 0.75); font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; text-transform: uppercase; }
 .files { display: grid; grid-template-columns: repeat(auto-fill, 120px); gap: 12px; padding: 0 16px; justify-content: start; }
 .file {
   display: flex; flex-direction: column; align-items: center; padding: 12px 6px; border: 0; border-radius: 6px;
