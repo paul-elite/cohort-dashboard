@@ -28,12 +28,12 @@ function save(key, value) {
 
 /* ---------- Glyphs ---------- */
 const Chevron = ({ dir, size = 18 }) => (
-  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#2e3238" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d={dir === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
   </svg>
 );
 const Grip = ({ faded }) => (
-  <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill={faded ? '#d5d9df' : '#5c6470'}>
+  <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill={faded ? '#d6d6e0' : '#8b8ca3'}>
     {[7, 12, 17].map((y) => (<g key={y}><circle cx="9" cy={y} r="1.6" /><circle cx="15" cy={y} r="1.6" /></g>))}
   </svg>
 );
@@ -211,12 +211,12 @@ function Todos({ todos, setTodos, query }) {
             <span className="gutter">
               <button type="button" aria-pressed={t.done} aria-label={(t.done ? 'Mark not done: ' : 'Mark done: ') + t.text}
                 onClick={() => setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)))}>
-                {t.done ? <Tick color="#070808" size={18} w={2.6} /> : <span style={{ width: 18, height: 18 }} />}
+                {t.done ? <Tick color="#191a2c" size={16} w={2.6} /> : <span style={{ width: 16, height: 16 }} />}
               </button>
             </span>
             <span className="text">{t.text}</span>
             <button type="button" className="x" aria-label={'Remove ' + t.text} onClick={() => setTodos(todos.filter((x) => x.id !== t.id))}>
-              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a0a7b1" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           </li>
         ))}
@@ -227,7 +227,7 @@ function Todos({ todos, setTodos, query }) {
           <input id="new-todo" type="text" placeholder="Add a new todo" value={draft}
             onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add(); }} />
           <button type="button" className="add" onClick={add}>
-            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#008fff" /><path d="M12 7v10M7 12h10" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /></svg>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#0a64c8" /><path d="M12 7v10M7 12h10" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /></svg>
             Add
           </button>
         </li>
@@ -272,12 +272,13 @@ function SessionPanel({ todayKey, onOpenDay }) {
         <a className="join" href={MEET_LINK} target="_blank" rel="noreferrer"><UserAdd />Join In</a>
       </div>
       <div className="session">
+        <p className="eyebrow">{isLive ? "Today\u2019s session" : 'Next session'}</p>
         <h2 id="session-h">{LIVE_SESSION.title}</h2>
         {isLive
           ? <div className="live-now"><VideoIcon />Live Now</div>
           : <div className="upcoming-when">{longDate(LIVE_SESSION.date)}</div>}
         <div className="meet">
-          <span className="logo-tile"><img src="/icons/google-meet.webp" width="32" height="27" alt="" /></span>
+          <span className="logo-tile"><img src="/icons/google-meet.webp" width="30" height="25" alt="" /></span>
           <div className="txt">
             <div className="t1">Google Meet Session</div>
             <div className="t2">Online Event</div>
@@ -287,7 +288,7 @@ function SessionPanel({ todayKey, onOpenDay }) {
       </div>
       {upcoming.length > 0 && (
         <div className="coming">
-          <h3>Coming up</h3>
+          <h3 className="eyebrow">Coming up</h3>
           {upcoming.map((k) => (
             <button type="button" key={k} onClick={() => onOpenDay(k)}>
               <i style={{ background: SESSIONS[k].tags[0].color }} />
@@ -339,7 +340,7 @@ export default function App() {
         <div className="nav">
           {navItems.map(([k, label, count]) => (
             <button key={k} type="button" className="nav-item" aria-current={view === k ? 'page' : undefined} onClick={() => go(k)}>
-              <NavGlyph kind={k} />{label}
+              <NavGlyph kind={k} /><span>{label}</span>
               {count !== undefined && <span className="count mono">{count}</span>}
             </button>
           ))}
@@ -349,7 +350,7 @@ export default function App() {
           <div className="layout-head">
             <h2 id="layout-h">Page Layout</h2>
             <button type="button" className="collapse" aria-expanded={layoutOpen} aria-label={layoutOpen ? 'Collapse page layout' : 'Expand page layout'} onClick={() => setLayoutOpen(!layoutOpen)}>
-              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#b9bec6" strokeWidth="1.4"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" />{layoutOpen ? <path d="M6.5 10h7" strokeLinecap="round" /> : <path d="M6.5 10h7M10 6.5v7" strokeLinecap="round" />}</svg>
+              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" />{layoutOpen ? <path d="M6.5 10h7" strokeLinecap="round" /> : <path d="M6.5 10h7M10 6.5v7" strokeLinecap="round" />}</svg>
             </button>
           </div>
           {layoutOpen && (
@@ -377,7 +378,7 @@ export default function App() {
             <button type="button" aria-label="Forward" disabled={nav.pos >= nav.history.length - 1} onClick={() => setNav((n) => ({ ...n, pos: Math.min(n.history.length - 1, n.pos + 1) }))}><Chevron dir="right" /></button>
           </div>
           <label className="search">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0a7b1" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             <span className="sr-only">Search</span>
             <input type="search" placeholder="Search anything here" value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>

@@ -9,18 +9,18 @@ export const LIVE_SESSION = {
   live: true,
 };
 
-// Solid label colours, as in the Figma calendar.
+// Solid label colours, as in the Figma calendar. Each passes 4.5:1 with white text.
 const C = {
   violet: '#5b2ee0',
-  green: '#16a34a',
-  purple: '#b04fe0',
-  blue: '#1a8cff',
-  orange: '#f2603a',
+  green: '#15803d',
+  purple: '#9333ea',
+  blue: '#0b6bcb',
+  orange: '#c2410c',
   indigo: '#2a4fe0',
-  yellow: '#c99400',
-  teal: '#0f8f84',
+  yellow: '#a16207',
+  teal: '#0f766e',
   magenta: '#a400c9',
-  pink: '#e0336f',
+  pink: '#be185d',
 };
 const t = (label, c) => ({ label, color: C[c] });
 
