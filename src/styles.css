@@ -225,7 +225,8 @@ kbd { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; line-
   content: ""; position: absolute; left: 0; top: -12px; width: 96px; height: 20px; border-radius: 6px 6px 0 0;
   background: var(--card); box-shadow: 0 -1px 0 var(--line), -1px 0 0 var(--line), 1px 0 0 var(--line);
 }
-.files { display: grid; grid-template-columns: repeat(auto-fill, 120px); gap: 12px; padding: 0 16px; justify-content: start; }
+.files { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 0 16px; }
+.file .name, .file .when { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file {
   display: flex; flex-direction: column; align-items: center; padding: 12px 6px; border: 0; border-radius: 6px;
   background: transparent; cursor: pointer; min-width: 0;
