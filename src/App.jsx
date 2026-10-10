@@ -105,66 +105,106 @@ function Rings({ n = 14 }) {
   return <div className="rings" aria-hidden="true">{Array.from({ length: n }, (_, i) => <span key={i} />)}</div>;
 }
 
+function AgendaRow({ k, todayKey, selected, onOpen }) {
+  const s = SESSIONS[k];
+  const d = fromKey(k);
+  const isToday = k === todayKey;
+  return (
+    <li>
+      <button type="button" className={'ag' + (selected ? ' selected' : '') + (isToday ? ' today' : '')} onClick={() => onOpen(k)}>
+        <span className="bar" style={{ background: s.tags[0].color }} aria-hidden="true" />
+        <span className="ag-date"><b>{d.getDate()}</b>{d.toLocaleDateString('en-US', { month: 'short' })}</span>
+        <span className="ag-text">
+          <span className="ag-title">{s.title}</span>
+          <span className="ag-meta">{isToday ? 'Today' : DOW[d.getDay()].charAt(0) + DOW[d.getDay()].slice(1).toLowerCase()} · {s.time}</span>
+        </span>
+        {isToday && LIVE_SESSION.live && LIVE_SESSION.date === k && <span className="pulse" aria-label="Live now" />}
+      </button>
+    </li>
+  );
+}
+
+const DOW1 = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const shortDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const startOfWeek = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+
 function Calendar({ big, todayKey, onOpenDay, selectedKey }) {
-  const now = new Date();
-  const [ym, setYm] = useState(() => {
-    const first = Object.keys(SESSIONS).sort().find((k) => k >= todayKey);
-    const d = first ? fromKey(first) : now;
-    return { y: d.getFullYear(), m: d.getMonth() };
-  });
-  const cells = useMemo(() => {
-    const start = new Date(ym.y, ym.m, 1).getDay();
-    const daysIn = new Date(ym.y, ym.m + 1, 0).getDate();
-    const total = Math.ceil((start + daysIn) / 7) * 7;
-    return Array.from({ length: total }, (_, i) => {
-      const d = new Date(ym.y, ym.m, i - start + 1);
-      const key = keyOf(d);
-      const inMonth = d.getMonth() === ym.m;
-      return { d, key, inMonth, session: inMonth ? SESSIONS[key] : null };
-    });
-  }, [ym]);
-  const step = (n) => setYm(({ y, m }) => { const d = new Date(y, m + n, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const today = fromKey(todayKey);
+  const [mode, setMode] = useState(() => load('cohort-cal-view', 'week'));
+  useEffect(() => save('cohort-cal-view', mode), [mode]);
+  // anchor: any date inside the visible week or month
+  const [anchor, setAnchor] = useState(today);
+
+  const days = useMemo(() => {
+    if (mode === 'week') {
+      const s = startOfWeek(anchor);
+      return Array.from({ length: 7 }, (_, i) => new Date(s.getFullYear(), s.getMonth(), s.getDate() + i));
+    }
+    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const lead = first.getDay();
+    const total = Math.ceil((lead + new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate()) / 7) * 7;
+    return Array.from({ length: total }, (_, i) => new Date(first.getFullYear(), first.getMonth(), i - lead + 1));
+  }, [mode, anchor]);
+
+  const step = (n) => setAnchor((d) => mode === 'week'
+    ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7 * n)
+    : new Date(d.getFullYear(), d.getMonth() + n, 1));
+
+  const inRange = (d) => mode === 'week' || d.getMonth() === anchor.getMonth();
+  const listed = days.filter(inRange).map((d) => keyOf(d)).filter((k) => SESSIONS[k]);
+  const title = mode === 'week'
+    ? `${shortDate(days[0])} – ${days[0].getMonth() === days[6].getMonth() ? days[6].getDate() : shortDate(days[6])}`
+    : MONTHS[anchor.getMonth()];
+  const unit = mode === 'week' ? 'week' : 'month';
+  const lastKey = keyOf(days[days.length - 1]);
+  const later = mode === 'week' ? Object.keys(SESSIONS).sort().filter((k) => k > lastKey).slice(0, 3) : [];
+  const away = mode === 'week' ? !days.some((d) => keyOf(d) === todayKey)
+    : anchor.getMonth() !== today.getMonth() || anchor.getFullYear() !== today.getFullYear();
 
   return (
-    <section className={'card cal' + (big ? ' big' : '')} aria-labelledby="cal-h">
+    <section className={'card cal ' + mode + (big ? ' big' : '')} aria-labelledby="cal-h">
       <Rings />
       <div className="card-head">
-        <h2 id="cal-h">{MONTHS[ym.m]}</h2>
-        <div className="glass seg cal-nav">
-          <button type="button" aria-label="Previous month" onClick={() => step(-1)}><Icon icon={ArrowLeft01Icon} size={18} /></button>
-          <span className="div" aria-hidden="true" />
-          <button type="button" className="today-btn" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>Today</button>
-          <span className="div" aria-hidden="true" />
-          <button type="button" aria-label="Next month" onClick={() => step(1)}><Icon icon={ArrowRight01Icon} size={18} /></button>
+        <h2 id="cal-h">{title} <span className="year">{anchor.getFullYear()}</span></h2>
+        <div className="cal-tools">
+          <div className="mode" role="tablist" aria-label="Calendar view">
+            {['week', 'month'].map((m) => (
+              <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'on' : ''} onClick={() => setMode(m)}>
+                {m === 'week' ? 'Week' : 'Month'}
+              </button>
+            ))}
+          </div>
+          {away && <button type="button" className="today-link" onClick={() => setAnchor(today)}>Today</button>}
+          <button type="button" className="ghost-ic" aria-label={'Previous ' + unit} onClick={() => step(-1)}><Icon icon={ArrowLeft01Icon} size={18} /></button>
+          <button type="button" className="ghost-ic" aria-label={'Next ' + unit} onClick={() => step(1)}><Icon icon={ArrowRight01Icon} size={18} /></button>
         </div>
       </div>
-      <div className="grid7">
-        {DOW.map((d) => <div key={d} className="dow">{d}</div>)}
-        {cells.map((c) => {
-          const isToday = c.key === todayKey;
-          const s = c.session;
+
+      <div className="days" role="grid">
+        {DOW1.map((d, i) => <div key={i} className="dow" aria-hidden="true">{mode === 'week' ? DOW[i].slice(0, 3) : d}</div>)}
+        {days.map((d) => {
+          const k = keyOf(d);
+          const s = SESSIONS[k];
+          const out = !inRange(d);
           return (
-            <button type="button" key={c.key}
-              className={'cell' + (s ? ' has' : '') + (isToday ? ' today' : '') + (selectedKey === c.key ? ' selected' : '')}
-              aria-pressed={selectedKey === c.key}
-              onClick={() => onOpenDay(c.key)}
-              aria-label={longDate(c.key) + (isToday ? ', today' : '') + (s ? ': ' + s.title : '')}>
-              {isToday && (
-                <span className={'today-mark' + (s ? ' top' : '')} aria-hidden="true">
-                  <Icon icon={Sun03Icon} size={14} bold style={{ color: '#FFAA00' }} />
-                  <span className="label">Today</span>
-                </span>
-              )}
-              <span className={'num' + (s ? ' bold' : '') + (!c.inMonth ? ' out' : '')}>{c.d.getDate()}</span>
-              {s && (
-                <span className="tags">
-                  {s.tags.map((t) => <span key={t.label} className="tag" style={{ background: t.color, color: t.ink }}>{t.label}</span>)}
-                </span>
-              )}
+            <button type="button" key={k}
+              className={'day' + (s ? ' has' : '') + (k === todayKey ? ' today' : '') + (selectedKey === k ? ' selected' : '') + (out ? ' out' : '')}
+              aria-pressed={selectedKey === k}
+              onClick={() => onOpenDay(k)}
+              aria-label={longDate(k) + (k === todayKey ? ', today' : '') + (s ? ': ' + s.title : '')}>
+              <span className="n">{d.getDate()}</span>
+              <span className="dot" style={s && !out ? { background: s.tags[0].color } : undefined} aria-hidden="true" />
             </button>
           );
         })}
       </div>
+
+      <ul className="agenda" aria-label={'Sessions this ' + unit}>
+        {listed.length === 0 && <li className="none">No sessions this {unit}.</li>}
+        {listed.map((k) => <AgendaRow key={k} k={k} todayKey={todayKey} selected={selectedKey === k} onOpen={onOpenDay} />)}
+        {later.length > 0 && <li className="ag-head">Up next</li>}
+        {later.map((k) => <AgendaRow key={k} k={k} todayKey={todayKey} selected={selectedKey === k} onOpen={onOpenDay} />)}
+      </ul>
     </section>
   );
 }
