@@ -67,6 +67,7 @@ a { color: var(--blue-ink); }
 /* Sidebar ------------------------------------------------------------------ */
 .sidebar {
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--card); box-shadow: 1px 0 0 var(--line);
   padding: var(--top) 24px 32px 32px;
   display: flex; flex-direction: column; gap: 32px;
 }
@@ -85,10 +86,7 @@ a { color: var(--blue-ink); }
 }
 .nav-item svg { flex: none; color: var(--text-3); }
 .nav-item:hover { background: rgba(25, 26, 44, 0.04); }
-.nav-item[aria-current="page"] {
-  background: var(--card); color: var(--text-1); font-weight: 500;
-  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(25,26,44,0.04);
-}
+.nav-item[aria-current="page"] { background: var(--fill); color: var(--text-1); font-weight: 500; }
 .nav-item[aria-current="page"] svg { color: var(--text-1); }
 .nav-item .count { margin-left: auto; color: var(--text-3); }
 
@@ -115,7 +113,16 @@ a { color: var(--blue-ink); }
   min-width: 0; padding: var(--top) clamp(24px, calc((100% - 560px) / 2), 200px) 48px;
   display: flex; flex-direction: column; gap: 24px; container-type: inline-size;
 }
-.toolbar { display: flex; align-items: center; gap: 12px; height: var(--row); }
+.toolbar { position: relative; display: flex; align-items: center; gap: 12px; height: var(--row); }
+/* Back: a single round glass button. When the side margin has room, it sits
+   outside the content column, 16px left of the search bar and cards. */
+.back { width: 40px; height: 40px; flex: none; border-radius: 50%; padding: 0; cursor: pointer; display: grid; place-items: center; color: var(--text-1); }
+.back:disabled { color: var(--text-4); cursor: default; }
+.back:disabled:hover { background: linear-gradient(180deg, #ffffff 0%, #f3f3f7 100%); }
+@media (min-width: 928px) and (max-width: 1280px), (min-width: 1440px) {
+  .back { position: absolute; right: calc(100% + 16px); top: 2px; }
+  .main { padding-left: clamp(72px, calc((100% - 560px) / 2), 200px); padding-right: clamp(72px, calc((100% - 560px) / 2), 200px); }
+}
 .glass {
   background: linear-gradient(180deg, #ffffff 0%, #f3f3f7 100%);
   border: 1px solid rgba(25, 26, 44, 0.09);

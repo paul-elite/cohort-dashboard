@@ -372,11 +372,7 @@ export default function App() {
 
       <main className="main">
         <div className="toolbar">
-          <div className="glass seg">
-            <button type="button" aria-label="Back" disabled={nav.pos === 0} onClick={() => setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) }))}><Chevron dir="left" /></button>
-            <span className="div" aria-hidden="true" />
-            <button type="button" aria-label="Forward" disabled={nav.pos >= nav.history.length - 1} onClick={() => setNav((n) => ({ ...n, pos: Math.min(n.history.length - 1, n.pos + 1) }))}><Chevron dir="right" /></button>
-          </div>
+          <button type="button" className="glass back" aria-label="Back" disabled={nav.pos === 0} onClick={() => setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) }))}><Chevron dir="left" /></button>
           <label className="search">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             <span className="sr-only">Search</span>
