@@ -198,6 +198,7 @@ function Resources({ query, onOpen }) {
 const TODO_MAX = 80;
 function Todos({ todos, setTodos, query }) {
   const [editing, setEditing] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
   const [shake, setShake] = useState(0);
@@ -222,14 +223,14 @@ function Todos({ todos, setTodos, query }) {
     setTimeout(() => setJustAdded((cur) => (cur === id ? null : cur)), 1400);
     inputRef.current?.focus({ preventScroll: true });
   };
-  const close = () => { setDraft(''); setError(''); setEditing(false); };
+  const close = () => { setDraft(''); setError(''); setEditing(false); setFocused(false); };
   const toggle = (t) => { setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x))); setAnnounce((t.done ? 'Reopened ' : 'Completed ') + t.text); };
   const remove = (t) => { setTodos(todos.filter((x) => x.id !== t.id)); setAnnounce('Removed ' + t.text); };
 
   const fieldState = error ? 'is-error' : draft.trim() ? 'is-filled' : 'is-empty';
   const blanks = Math.max(0, 3 - shown.length - (error ? 1 : 0));
   return (
-    <section className="card todos" aria-labelledby="todo-h">
+    <section className={'card todos' + (editing && focused ? ' active' : '') + (editing && error ? ' has-error' : '')} aria-labelledby="todo-h">
       <Rings />
       <div className="card-head">
         <h2 id="todo-h">To-dos</h2>
@@ -264,18 +265,23 @@ function Todos({ todos, setTodos, query }) {
         ) : (
           <li className={'adder editing ' + fieldState}>
             <span className="gutter"><span className="circle ghost" /></span>
-            <div className="field" key={shake} data-shake={shake > 0 || undefined}>
+            <div className="entry" key={shake} data-shake={shake > 0 || undefined}>
               <label className="sr-only" htmlFor="new-todo">New to-do</label>
               <input id="new-todo" ref={inputRef} type="text" placeholder="What needs doing?" value={draft} maxLength={TODO_MAX}
                 aria-invalid={!!error} aria-describedby={error ? 'todo-error' : undefined}
                 onChange={(e) => { setDraft(e.target.value); if (error) setError(''); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') add(); if (e.key === 'Escape') close(); }}
-                onBlur={() => { if (!draft.trim()) close(); }} />
-              {draft.length > TODO_MAX - 20 && <span className="counter">{draft.length}/{TODO_MAX}</span>}
-              {fieldState !== 'is-filled' && <span className="hint" aria-hidden="true"><kbd>esc</kbd></span>}
-              <button type="button" className="add-pill" disabled={!draft.trim()} onMouseDown={(e) => e.preventDefault()} onClick={add}>
-                Add<kbd aria-hidden="true">↵</kbd>
-              </button>
+                onFocus={() => setFocused(true)}
+                onBlur={() => { setFocused(false); if (!draft.trim()) close(); }} />
+              {focused && (
+                <>
+                  {draft.length > TODO_MAX - 20 && <span className="counter">{draft.length}/{TODO_MAX}</span>}
+                  {fieldState !== 'is-filled' && <span className="hint" aria-hidden="true"><kbd>esc</kbd></span>}
+                  <button type="button" className="add-pill" disabled={!draft.trim()} onMouseDown={(e) => e.preventDefault()} onClick={add}>
+                    Add<kbd aria-hidden="true">↵</kbd>
+                  </button>
+                </>
+              )}
             </div>
           </li>
         )}
