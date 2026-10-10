@@ -174,22 +174,59 @@ function FileArt({ icon }) {
   return <img src={i.src} width={i.w} height={i.h} alt="" />;
 }
 
+/* Resources: a coloured folder with category tabs (like a filing divider) */
+const FOLDER_TABS = [
+  { id: 'all', label: 'All', color: '#0A9BFF' },
+  { id: 'recording', label: 'Video', color: '#12A194' },
+  { id: 'font', label: 'Fonts', color: '#0E9A45' },
+  { id: 'audio', label: 'Audio', color: '#A3C73A' },
+  { id: 'zip', label: 'Archives', color: '#F5DD14' },
+  { id: 'book', label: 'Books', color: '#FF9A16' },
+];
 function Resources({ query, onOpen, selected }) {
+  const [tab, setTab] = useState(() => load('cohort-folder', 'all'));
+  useEffect(() => save('cohort-folder', tab), [tab]);
   const q = query.trim().toLowerCase();
-  const items = RESOURCES.filter((r) => !q || r.name.toLowerCase().includes(q));
+  const index = Math.max(0, FOLDER_TABS.findIndex((t) => t.id === tab));
+  const active = FOLDER_TABS[index];
+  const items = RESOURCES.filter((r) => (tab === 'all' || r.icon === tab) && (!q || r.name.toLowerCase().includes(q)));
+  const count = (id) => RESOURCES.filter((r) => id === 'all' || r.icon === id).length;
+  const onKey = (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    const next = FOLDER_TABS[(index + d + FOLDER_TABS.length) % FOLDER_TABS.length];
+    setTab(next.id);
+    document.getElementById('tab-' + next.id)?.focus();
+  };
   return (
-    <section className="card res" aria-labelledby="res-h">
-      <div className="card-head"><h2 id="res-h">Resources</h2></div>
-      <div className="files">
-        {items.map((f) => (
-          <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
-            <span className="art"><FileArt icon={f.icon} /></span>
-            <span className="name">{f.name}</span>
-            <span className="when">{f.when}</span>
+    <section className={'card res folder' + (index === 0 ? ' first' : '')} style={{ '--folder': active.color }} aria-labelledby="res-h">
+      <div className="tabs" role="tablist" aria-label="Resource categories" onKeyDown={onKey}>
+        {FOLDER_TABS.map((t, i) => (
+          <button key={t.id} id={'tab-' + t.id} type="button" role="tab" aria-selected={t.id === tab} tabIndex={t.id === tab ? 0 : -1}
+            className={'tab' + (t.id === tab ? ' on' : '')} style={{ '--tab': t.color, zIndex: t.id === tab ? 20 : FOLDER_TABS.length - i }}
+            onClick={() => setTab(t.id)}>
+            <span className="tab-no">{String(i + 1).padStart(2, '0')}</span>
+            <span className="tab-label">{t.label}</span>
           </button>
         ))}
       </div>
-      {items.length === 0 && <p className="empty">No resources match your search.</p>}
+      <div className="folder-body" role="tabpanel" aria-labelledby={'tab-' + active.id}>
+        <div className="folder-head">
+          <h2 id="res-h">Resources:<br />Section {String(index + 1).padStart(2, '0')}<br />{active.label}</h2>
+          <span className="folder-count">{count(active.id)} {count(active.id) === 1 ? 'file' : 'files'}</span>
+        </div>
+        <div className="files">
+          {items.map((f) => (
+            <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
+              <span className="art"><FileArt icon={f.icon} /></span>
+              <span className="name">{f.name}</span>
+              <span className="when">{f.when}</span>
+            </button>
+          ))}
+        </div>
+        {items.length === 0 && <p className="empty">{q ? 'No ' + active.label.toLowerCase() + ' match your search.' : 'Nothing in this section yet.'}</p>}
+      </div>
     </section>
   );
 }
@@ -208,6 +245,19 @@ function Todos({ todos, setTodos, query }) {
   const toast = useToast();
   const inputRef = useRef(null);
   useEffect(() => { if (editing) inputRef.current?.focus({ preventScroll: true }); }, [editing]);
+  // Keep the paper on whole 48px lines: any leftover height moves under the header.
+  const cardRef = useRef(null);
+  const fillerRef = useRef(null);
+  const spare = useRef(0);
+  useEffect(() => {
+    const el = fillerRef.current; if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const next = Math.round(el.getBoundingClientRect().height + spare.current) % 48;
+      if (next !== spare.current) { spare.current = next; cardRef.current?.style.setProperty('--spare', next + 'px'); }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const q = query.trim().toLowerCase();
   const shown = todos.filter((t) => !q || t.text.toLowerCase().includes(q));
@@ -242,9 +292,8 @@ function Todos({ todos, setTodos, query }) {
   };
 
   const fieldState = error ? 'is-error' : draft.trim() ? 'is-filled' : 'is-empty';
-  const blanks = Math.max(0, 3 - shown.length - (error ? 1 : 0));
   return (
-    <section className={'card todos' + (editing && focused ? ' active' : '') + (editing && error ? ' has-error' : '')} aria-labelledby="todo-h">
+    <section ref={cardRef} className={'card todos' + (editing && focused ? ' active' : '') + (editing && error ? ' has-error' : '')} aria-labelledby="todo-h">
       <Rings />
       <div className="card-head">
         <h2 id="todo-h">To-dos</h2>
@@ -271,6 +320,7 @@ function Todos({ todos, setTodos, query }) {
           <li className="note"><span className="gutter" /><span className="text">{q ? 'No to-dos match \u201c' + query.trim() + '\u201d' : 'Nothing here yet. Add your first to-do.'}</span></li>
         )}
 
+        <li className="filler" ref={fillerRef} aria-hidden="true"><span className="gutter" /></li>
         {!editing ? (
           <li className="adder idle">
             <span className="gutter"><Icon icon={PlusSignIcon} size={18} /></span>
@@ -287,10 +337,11 @@ function Todos({ todos, setTodos, query }) {
                 onKeyDown={(e) => { if (e.key === 'Enter') add(); if (e.key === 'Escape') close(); }}
                 onFocus={() => setFocused(true)}
                 onBlur={() => { setFocused(false); if (!draft.trim()) close(); }} />
+              {error && <span className="inline-error" id="todo-error" role="alert"><Icon icon={AlertCircleIcon} size={16} />{error}</span>}
               {focused && (
                 <>
                   {draft.length > TODO_MAX - 20 && <span className="counter">{draft.length}/{TODO_MAX}</span>}
-                  {fieldState !== 'is-filled' && <span className="hint" aria-hidden="true"><kbd>esc</kbd></span>}
+                  {fieldState === 'is-empty' && <span className="hint" aria-hidden="true"><kbd>esc</kbd></span>}
                   <button type="button" className="add-pill" disabled={!draft.trim()} onMouseDown={(e) => e.preventDefault()} onClick={add}>
                     Add<kbd aria-hidden="true">↵</kbd>
                   </button>
@@ -299,10 +350,6 @@ function Todos({ todos, setTodos, query }) {
             </div>
           </li>
         )}
-        {editing && error && (
-          <li className="helper" id="todo-error" role="alert"><span className="gutter" /><span className="text"><Icon icon={AlertCircleIcon} size={16} />{error}</span></li>
-        )}
-        {Array.from({ length: blanks }, (_, i) => <li key={'b' + i} className="blank" aria-hidden="true"><span className="gutter" /></li>)}
       </ul>
     </section>
   );
