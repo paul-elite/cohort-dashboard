@@ -9,20 +9,22 @@ export const LIVE_SESSION = {
   live: true,
 };
 
-// Solid label colours, as in the Figma calendar. Each passes 4.5:1 with white text.
+// Bright, cheerful label colours. Each pairs a vivid fill with the ink
+// (white or deep violet-black) that keeps the label readable at 4.5:1 or better.
+const INK = '#1b1530';
 const C = {
-  violet: '#5b2ee0',
-  green: '#15803d',
-  purple: '#9333ea',
-  blue: '#0b6bcb',
-  orange: '#c2410c',
-  indigo: '#2a4fe0',
-  yellow: '#a16207',
-  teal: '#0f766e',
-  magenta: '#a400c9',
-  pink: '#be185d',
+  violet: ['#6A45FF', '#ffffff'],
+  green: ['#1FCB6B', INK],
+  purple: ['#B44DFF', INK],
+  blue: ['#1E90FF', INK],
+  orange: ['#FF7A1A', INK],
+  indigo: ['#3B5BFF', '#ffffff'],
+  yellow: ['#FFC21A', INK],
+  teal: ['#12C7B8', INK],
+  magenta: ['#E040FB', INK],
+  pink: ['#FF3D8B', INK],
 };
-const t = (label, c) => ({ label, color: C[c] });
+const t = (label, c) => ({ label, color: C[c][0], ink: C[c][1] });
 
 // Keys are YYYY-MM-DD.
 export const SESSIONS = {
@@ -51,8 +53,8 @@ export const DEFAULT_TODOS = [
 ];
 
 export const TOOLS = [
-  { name: 'Figma', mark: 'F', color: '#7a3fd6', href: 'https://figma.com' },
+  { name: 'Figma', mark: 'F', color: '#8B5CFF', href: 'https://figma.com' },
   { name: 'Mobbin', mark: 'M', color: '#1d1d1f', href: 'https://mobbin.com' },
-  { name: 'Type Scale', mark: 'T', color: '#0b6b65', href: 'https://typescale.com' },
-  { name: 'Contrast Checker', mark: 'C', color: '#9a5800', href: 'https://webaim.org/resources/contrastchecker/' },
+  { name: 'Type Scale', mark: 'T', color: '#0FB5A6', href: 'https://typescale.com' },
+  { name: 'Contrast Checker', mark: 'C', color: '#FF8A1F', href: 'https://webaim.org/resources/contrastchecker/' },
 ];

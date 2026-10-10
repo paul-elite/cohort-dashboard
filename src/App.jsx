@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, Book02Icon, Calendar03Icon, CalendarAdd01Icon,
   Cancel01Icon, CheckmarkCircle02Icon, Clock01Icon, DashboardSquare01Icon, DragDropVerticalIcon, FileAudioIcon,
   FileVideoIcon, FileZipIcon, Folder01Icon, Link04Icon, MinusSignSquareIcon, Mortarboard01Icon, PlusSignIcon, AlertCircleIcon,
   PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon, UserAdd01Icon, UserMultiple02Icon,
-  Video01Icon, Wrench01Icon,
+  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon,
 } from '@hugeicons/core-free-icons';
 import { BRAND, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS } from './data.js';
 
@@ -53,50 +53,51 @@ function downloadIcs(key, s) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/* ---------- Toasts ----------
+   toast({ tone, icon, title, desc, action: { label, onClick | href }, duration }) */
+const ToastCtx = createContext(() => {});
+const useToast = () => useContext(ToastCtx);
+
+function ToastItem({ t, onDismiss }) {
+  const timer = useRef(null);
+  const start = () => { if (t.duration !== Infinity) timer.current = setTimeout(() => onDismiss(t.id), t.duration || 4000); };
+  const stop = () => clearTimeout(timer.current);
+  useEffect(() => { start(); return stop; }, []);
+  const act = t.action;
+  return (
+    <li className={'toast tone-' + (t.tone || 'info')} onMouseEnter={stop} onMouseLeave={start} onFocus={stop} onBlur={start}>
+      <span className="toast-icon"><Icon icon={t.icon || InformationCircleIcon} size={18} bold /></span>
+      <div className="toast-text">
+        <p className="toast-title">{t.title}</p>
+        {t.desc && <p className="toast-desc">{t.desc}</p>}
+      </div>
+      {act && (act.href
+        ? <a className="toast-action" href={act.href} target="_blank" rel="noreferrer" onClick={() => onDismiss(t.id)}>{act.label}</a>
+        : <button type="button" className="toast-action" onClick={() => { act.onClick(); onDismiss(t.id); }}>{act.label}</button>)}
+      {t.secondary && <button type="button" className="toast-action quiet" onClick={() => { t.secondary.onClick(); onDismiss(t.id); }}>{t.secondary.label}</button>}
+      <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => onDismiss(t.id)}><Icon icon={Cancel01Icon} size={14} /></button>
+    </li>
+  );
+}
+
+function Toaster({ toasts, onDismiss }) {
+  return (
+    <ol className="toaster" aria-live="polite" aria-label="Notifications">
+      {toasts.map((t) => <ToastItem key={t.id} t={t} onDismiss={onDismiss} />)}
+    </ol>
+  );
+}
+
 function useCopy() {
+  const toast = useToast();
   const [copied, setCopied] = useState(false);
-  const copy = (text) => {
+  const copy = (text, what = 'Link') => {
     try { navigator.clipboard.writeText(text); } catch (e) { /* clipboard unavailable */ }
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
+    toast({ tone: 'info', icon: Link04Icon, title: what + ' copied', desc: 'Paste it anywhere to share.' });
   };
   return [copied, copy];
-}
-
-/* ---------- Modal: macOS window with traffic lights ---------- */
-function Modal({ title, onClose, footer, children }) {
-  const [mode, setMode] = useState('normal'); // normal | mini | zoomed
-  const ref = useRef(null);
-  useEffect(() => {
-    const prev = document.activeElement;
-    ref.current?.focus();
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; prev?.focus?.(); };
-  }, [onClose]);
-  return (
-    <div className="scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className={'modal' + (mode !== 'normal' ? ' ' + mode : '')}>
-        <div className="modal-bar">
-          <div className="lights">
-            <button type="button" className="light red" aria-label="Close" onClick={onClose}>
-              <svg width="8" height="8" viewBox="0 0 8 8" stroke="#7a0f0a" strokeWidth="1.3" strokeLinecap="round"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" /></svg>
-            </button>
-            <button type="button" className="light yellow" aria-label={mode === 'mini' ? 'Restore' : 'Minimize'} onClick={() => setMode(mode === 'mini' ? 'normal' : 'mini')}>
-              <svg width="8" height="8" viewBox="0 0 8 8" stroke="#8a5300" strokeWidth="1.4" strokeLinecap="round"><path d="M1.2 4h5.6" /></svg>
-            </button>
-            <button type="button" className="light green" aria-label={mode === 'zoomed' ? 'Exit full size' : 'Full size'} onClick={() => setMode(mode === 'zoomed' ? 'normal' : 'zoomed')}>
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="#0b5e10"><path d="M1.5 1.5h3.6L1.5 5.1zM6.5 6.5H2.9l3.6-3.6z" /></svg>
-            </button>
-          </div>
-          <h2>{title}</h2>
-        </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-foot">{footer}</div>}
-      </div>
-    </div>
-  );
 }
 
 /* ---------- Sections ---------- */
@@ -104,7 +105,7 @@ function Rings({ n = 14 }) {
   return <div className="rings" aria-hidden="true">{Array.from({ length: n }, (_, i) => <span key={i} />)}</div>;
 }
 
-function Calendar({ big, todayKey, onOpenDay }) {
+function Calendar({ big, todayKey, onOpenDay, selectedKey }) {
   const now = new Date();
   const [ym, setYm] = useState(() => {
     const first = Object.keys(SESSIONS).sort().find((k) => k >= todayKey);
@@ -144,19 +145,20 @@ function Calendar({ big, todayKey, onOpenDay }) {
           const s = c.session;
           return (
             <button type="button" key={c.key}
-              className={'cell' + (s ? ' has' : '') + (isToday ? ' today' : '')}
+              className={'cell' + (s ? ' has' : '') + (isToday ? ' today' : '') + (selectedKey === c.key ? ' selected' : '')}
+              aria-pressed={selectedKey === c.key}
               onClick={() => onOpenDay(c.key)}
               aria-label={longDate(c.key) + (isToday ? ', today' : '') + (s ? ': ' + s.title : '')}>
               {isToday && (
                 <span className={'today-mark' + (s ? ' top' : '')} aria-hidden="true">
-                  <Icon icon={Sun03Icon} size={14} bold style={{ color: '#d99a00' }} />
+                  <Icon icon={Sun03Icon} size={14} bold style={{ color: '#FFAA00' }} />
                   <span className="label">Today</span>
                 </span>
               )}
               <span className={'num' + (s ? ' bold' : '') + (!c.inMonth ? ' out' : '')}>{c.d.getDate()}</span>
               {s && (
                 <span className="tags">
-                  {s.tags.map((t) => <span key={t.label} className="tag" style={{ background: t.color }}>{t.label}</span>)}
+                  {s.tags.map((t) => <span key={t.label} className="tag" style={{ background: t.color, color: t.ink }}>{t.label}</span>)}
                 </span>
               )}
             </button>
@@ -203,7 +205,7 @@ function Todos({ todos, setTodos, query }) {
   const [error, setError] = useState('');
   const [shake, setShake] = useState(0);
   const [justAdded, setJustAdded] = useState(null);
-  const [announce, setAnnounce] = useState('');
+  const toast = useToast();
   const inputRef = useRef(null);
   useEffect(() => { if (editing) inputRef.current?.focus({ preventScroll: true }); }, [editing]);
 
@@ -219,13 +221,25 @@ function Todos({ todos, setTodos, query }) {
     if (todos.some((t) => !t.done && t.text.toLowerCase() === text.toLowerCase())) return fail('That\u2019s already on your list');
     const id = Date.now();
     setTodos([...todos, { id, text, done: false }]);
-    setDraft(''); setError(''); setJustAdded(id); setAnnounce('Added ' + text);
+    setDraft(''); setError(''); setJustAdded(id);
+    toast({ tone: 'success', icon: Tick02Icon, title: 'To-do added', desc: text });
     setTimeout(() => setJustAdded((cur) => (cur === id ? null : cur)), 1400);
     inputRef.current?.focus({ preventScroll: true });
   };
   const close = () => { setDraft(''); setError(''); setEditing(false); setFocused(false); };
-  const toggle = (t) => { setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x))); setAnnounce((t.done ? 'Reopened ' : 'Completed ') + t.text); };
-  const remove = (t) => { setTodos(todos.filter((x) => x.id !== t.id)); setAnnounce('Removed ' + t.text); };
+  const toggle = (t) => {
+    const flip = (list) => list.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x));
+    setTodos(flip(todos));
+    toast(t.done
+      ? { tone: 'info', icon: ArrowTurnBackwardIcon, title: 'Moved back to your list', desc: t.text }
+      : { tone: 'success', icon: PartyIcon, title: 'Nice, that\u2019s done', desc: t.text, action: { label: 'Undo', onClick: () => setTodos((cur) => cur.map((x) => (x.id === t.id ? { ...x, done: false } : x))) } });
+  };
+  const remove = (t) => {
+    const index = todos.findIndex((x) => x.id === t.id);
+    setTodos(todos.filter((x) => x.id !== t.id));
+    toast({ tone: 'danger', icon: Delete02Icon, title: 'To-do removed', desc: t.text,
+      action: { label: 'Undo', onClick: () => setTodos((cur) => { const next = cur.slice(); next.splice(Math.min(index, next.length), 0, t); return next; }) } });
+  };
 
   const fieldState = error ? 'is-error' : draft.trim() ? 'is-filled' : 'is-empty';
   const blanks = Math.max(0, 3 - shown.length - (error ? 1 : 0));
@@ -290,7 +304,6 @@ function Todos({ todos, setTodos, query }) {
         )}
         {Array.from({ length: blanks }, (_, i) => <li key={'b' + i} className="blank" aria-hidden="true"><span className="gutter" /></li>)}
       </ul>
-      <p className="sr-only" aria-live="polite">{announce}</p>
     </section>
   );
 }
@@ -310,48 +323,100 @@ function Tools() {
   );
 }
 
-function SessionPanel({ todayKey, onOpenDay }) {
-  const [copied, copy] = useCopy();
-  const d = fromKey(LIVE_SESSION.date);
-  const isLive = LIVE_SESSION.live;
-  const upcoming = Object.keys(SESSIONS).sort().filter((k) => k >= todayKey && k !== LIVE_SESSION.date).slice(0, 4);
+function EmptyPanel() {
   return (
-    <aside className="panel" aria-labelledby="session-h">
+    <aside className="panel empty-panel" aria-label="Details">
+      <div className="empty-state">
+        <span className="empty-icon"><Icon icon={CursorPointer01Icon} size={28} /></span>
+        <h3>Nothing selected</h3>
+        <p>Click a day on the calendar or a resource to see its details here.</p>
+      </div>
+    </aside>
+  );
+}
+
+function SessionList({ title, exclude, onOpenDay }) {
+  const keys = Object.keys(SESSIONS).sort().filter((k) => k !== exclude);
+  if (!keys.length) return null;
+  return (
+    <div className="coming">
+      <h3 className="eyebrow">{title}</h3>
+      {keys.map((k) => (
+        <button type="button" key={k} onClick={() => onOpenDay(k)}>
+          <i style={{ background: SESSIONS[k].tags[0].color }} />
+          <span className="l">{SESSIONS[k].title}</span>
+          <span className="d mono">{fromKey(k).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <Icon icon={ArrowRight01Icon} size={16} className="go" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* Day details: shown in the right-hand panel when a calendar day is clicked */
+function DayPanel({ dayKey, onClose, onOpenDay }) {
+  const toast = useToast();
+  const [copied, copy] = useCopy();
+  const ref = useRef(null);
+  const s = SESSIONS[dayKey];
+  const d = fromKey(dayKey);
+  const next = Object.keys(SESSIONS).sort().find((k) => k > dayKey);
+  const isLive = LIVE_SESSION.live && dayKey === LIVE_SESSION.date;
+  useEffect(() => {
+    ref.current?.scrollTo?.({ top: 0 });
+    if (window.innerWidth <= 1280) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [dayKey]);
+  const saveIcs = () => {
+    downloadIcs(dayKey, s);
+    toast({ tone: 'success', icon: CalendarAdd01Icon, title: 'Calendar file downloaded', desc: 'Open it to add \u201c' + s.title + '\u201d to your calendar.' });
+  };
+  return (
+    <aside className="panel detail" aria-labelledby="day-h" ref={ref} key={dayKey}>
       <div className="panel-top">
-        <div className="datechip" aria-label={d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}>
-          <span className="m">{MONTHS[d.getMonth()].slice(0, 3).toUpperCase()}</span>
-          <span className="d">{d.getDate()}</span>
-        </div>
-        <a className="join" href={MEET_LINK} target="_blank" rel="noreferrer"><Icon icon={UserAdd01Icon} size={18} bold />Join In</a>
+        <button type="button" className="glass back" aria-label="Close details" onClick={onClose}><Icon icon={Cancel01Icon} size={18} /></button>
+        <span className="eyebrow">{s ? 'Session details' : 'Day details'}</span>
       </div>
-      <div className="session">
-        <p className="eyebrow">{isLive ? "Today\u2019s session" : 'Next session'}</p>
-        <h2 id="session-h">{LIVE_SESSION.title}</h2>
-        {isLive
-          ? <div className="live-now"><Icon icon={Video01Icon} size={18} bold />Live Now</div>
-          : <div className="upcoming-when">{longDate(LIVE_SESSION.date)}</div>}
-        <div className="meet">
-          <span className="logo-tile"><img src="/icons/google-meet.webp" width="30" height="25" alt="" /></span>
-          <div className="txt">
-            <div className="t1">Google Meet Session</div>
-            <div className="t2">Online Event</div>
+      {s ? (
+        <>
+          <div className="m-event">
+            <div className="datechip lg" aria-hidden="true">
+              <span className="m">{MONTHS[d.getMonth()].slice(0, 3).toUpperCase()}</span>
+              <span className="d">{d.getDate()}</span>
+            </div>
+            <div>
+              <p className="eyebrow">{d.toLocaleDateString('en-US', { weekday: 'long' })}</p>
+              <h2 id="day-h">{s.title}</h2>
+              {isLive && <div className="live-now"><span className="pulse" aria-hidden="true" />Live now</div>}
+              <div className="session-tags">{s.tags.map((t) => <span key={t.label} className="tag" style={{ background: t.color, color: t.ink }}>{t.label}</span>)}</div>
+            </div>
           </div>
-          <button type="button" className="copy" onClick={() => copy(MEET_LINK)}><Icon icon={copied ? Tick02Icon : Link04Icon} size={16} />{copied ? 'Copied' : 'Copy link'}</button>
-        </div>
-      </div>
-      {upcoming.length > 0 && (
-        <div className="coming">
-          <h3 className="eyebrow">Coming up</h3>
-          {upcoming.map((k) => (
-            <button type="button" key={k} onClick={() => onOpenDay(k)}>
-              <i style={{ background: SESSIONS[k].tags[0].color }} />
-              <span className="l">{SESSIONS[k].title}</span>
-              <span className="d mono">{fromKey(k).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-              <Icon icon={ArrowRight01Icon} size={16} className="go" />
-            </button>
-          ))}
+          <div className="meet">
+            <span className="logo-tile"><img src="/icons/google-meet.webp" width="30" height="25" alt="" /></span>
+            <div className="txt">
+              <div className="t1">Google Meet Session</div>
+              <div className="t2">Online event</div>
+            </div>
+            <button type="button" className="copy" onClick={() => copy(MEET_LINK, 'Meet link')}><Icon icon={copied ? Tick02Icon : Link04Icon} size={16} />{copied ? 'Copied' : 'Copy link'}</button>
+          </div>
+          <ul className="rows">
+            <Row icon={Calendar03Icon} label="Date">{longDate(dayKey)}</Row>
+            <Row icon={Clock01Icon} label="Time">{s.time}</Row>
+            <Row icon={Mortarboard01Icon} label="Cohort">DesignTales</Row>
+          </ul>
+          <div className="detail-actions">
+            <button type="button" className="glass btn" onClick={saveIcs}><Icon icon={CalendarAdd01Icon} size={18} />Add to calendar</button>
+            <a className="btn primary" href={MEET_LINK} target="_blank" rel="noreferrer"><Icon icon={Video01Icon} size={18} bold />Join on Meet</a>
+          </div>
+        </>
+      ) : (
+        <div className="empty-state day-empty">
+          <span className="empty-icon"><Icon icon={Calendar03Icon} size={28} /></span>
+          <h2 id="day-h">No session on {d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
+          <p>{next ? <>Next up is <strong>{SESSIONS[next].title}</strong> on {fromKey(next).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</> : 'There are no more sessions scheduled.'}</p>
+          {next && <button type="button" className="btn primary" onClick={() => onOpenDay(next)}>See next session<Icon icon={ArrowRight01Icon} size={18} bold /></button>}
         </div>
       )}
+      <SessionList title={s ? 'Other sessions' : 'All sessions'} exclude={dayKey} onOpenDay={onOpenDay} />
     </aside>
   );
 }
@@ -416,58 +481,6 @@ function DetailPanel({ item, onClose, onSelect }) {
   );
 }
 
-function DayModal({ dayKey, onClose, onOpenDay }) {
-  const [copied, copy] = useCopy();
-  const s = SESSIONS[dayKey];
-  const d = fromKey(dayKey);
-  const next = Object.keys(SESSIONS).sort().find((k) => k > dayKey);
-  if (!s) {
-    return (
-      <Modal title={longDate(dayKey)} onClose={onClose} footer={<>
-        <span className="spacer" />
-        <button type="button" className="glass btn" onClick={onClose}>Close</button>
-        {next && <button type="button" className="btn primary" onClick={() => onOpenDay(next)}>Next session<Icon icon={ArrowRight01Icon} size={18} bold /></button>}
-      </>}>
-        <div className="empty-state">
-          <span className="empty-icon"><Icon icon={Calendar03Icon} size={32} /></span>
-          <h3>No session on this day</h3>
-          <p>{next ? <>Next up is <strong>{SESSIONS[next].title}</strong> on {fromKey(next).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.</> : 'There are no more sessions scheduled.'}</p>
-        </div>
-      </Modal>
-    );
-  }
-  return (
-    <Modal title={s.title} onClose={onClose} footer={<>
-      <button type="button" className="btn ghost" onClick={() => downloadIcs(dayKey, s)}><Icon icon={CalendarAdd01Icon} size={18} />Add to calendar</button>
-      <span className="spacer" />
-      <button type="button" className="glass btn" onClick={onClose}>Close</button>
-      <a className="btn primary" href={MEET_LINK} target="_blank" rel="noreferrer"><Icon icon={Video01Icon} size={18} bold />Join on Meet</a>
-    </>}>
-      <div className="m-event">
-        <div className="datechip lg" aria-hidden="true">
-          <span className="m">{MONTHS[d.getMonth()].slice(0, 3).toUpperCase()}</span>
-          <span className="d">{d.getDate()}</span>
-        </div>
-        <div>
-          <p className="eyebrow">{d.toLocaleDateString('en-US', { weekday: 'long' })}</p>
-          <h3>{s.title}</h3>
-          <div className="session-tags">{s.tags.map((t) => <span key={t.label} className="tag" style={{ background: t.color }}>{t.label}</span>)}</div>
-        </div>
-      </div>
-      <ul className="rows">
-        <Row icon={Calendar03Icon} label="Date">{longDate(dayKey)}</Row>
-        <Row icon={Clock01Icon} label="Time">{s.time}</Row>
-        <Row icon={Video01Icon} label="Where">
-          <span className="inline-copy">Google Meet
-            <button type="button" className="mini" onClick={() => copy(MEET_LINK)}><Icon icon={copied ? Tick02Icon : Link04Icon} size={14} />{copied ? 'Copied' : 'Copy link'}</button>
-          </span>
-        </Row>
-        <Row icon={Mortarboard01Icon} label="Cohort">DesignTales</Row>
-      </ul>
-    </Modal>
-  );
-}
-
 /* ---------- App ---------- */
 export default function App() {
   const todayKey = keyOf(new Date());
@@ -476,14 +489,17 @@ export default function App() {
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
   const [layoutOpen, setLayoutOpen] = useState(true);
-  const [modal, setModal] = useState(null); // { type: 'day', key }
+  const [panel, setPanel] = useState(null); // null | { type: 'resource', item } | { type: 'day', key }
+  const [toasts, setToasts] = useState([]);
+  const dismiss = useCallback((id) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
+  const toast = useCallback((t) => setToasts((cur) => [...cur.slice(-2), { id: Date.now() + Math.random(), ...t }]), []);
 
   useEffect(() => save('cohort-todos', todos), [todos]);
   useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) { e.preventDefault(); document.getElementById('search')?.focus(); }
-      if (e.key === 'Escape' && !document.querySelector('.scrim') && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) setDetail(null);
+      if (e.key === 'Escape' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) setPanel(null);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -498,16 +514,28 @@ export default function App() {
     return { history: h, pos: h.length - 1 };
   });
   const visible = (k) => (view === 'overview' ? show[k] : view === k);
-  const openDay = (key) => setModal({ type: 'day', key });
-  const [detail, setDetail] = useState(null);
-  const openResource = (item) => setDetail((cur) => (cur && cur.name === item.name ? null : item));
-  const closeModal = () => setModal(null);
+  const openDay = (key) => setPanel((cur) => (cur?.type === 'day' && cur.key === key ? null : { type: 'day', key }));
+  const showDay = (key) => setPanel({ type: 'day', key });
+  const openResource = (item) => setPanel((cur) => (cur?.type === 'resource' && cur.item.name === item.name ? null : { type: 'resource', item }));
+
+  // Live session announcement, once per browser session
+  useEffect(() => {
+    if (!LIVE_SESSION.live) return;
+    try { if (sessionStorage.getItem('live-toast')) return; sessionStorage.setItem('live-toast', '1'); } catch (e) { /* storage unavailable */ }
+    const t = setTimeout(() => toast({
+      tone: 'live', icon: Video01Icon, duration: Infinity,
+      title: LIVE_SESSION.title + ' is live', desc: 'Today \u00b7 Google Meet',
+      action: { label: 'Join', href: MEET_LINK }, secondary: { label: 'Details', onClick: () => showDay(LIVE_SESSION.date) },
+    }), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   const open = todos.filter((t) => !t.done).length;
   const navItems = [['overview', 'Overview'], ['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']];
   const layoutItems = [['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools']];
 
   return (
+    <ToastCtx.Provider value={toast}>
     <div className="app">
       <nav className="sidebar" aria-label="Main">
         <a className="logo" href="/">{BRAND}</a>
@@ -563,18 +591,19 @@ export default function App() {
         {view === 'overview' && <h1 className="sr-only">Overview</h1>}
 
         <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
-          {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} />}
-          {visible('resources') && <Resources query={query} onOpen={openResource} selected={detail?.name} />}
+          {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
+          {visible('resources') && <Resources query={query} onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} />}
           {visible('todos') && <Todos todos={todos} setTodos={setTodos} query={query} />}
           {visible('tools') && <Tools />}
         </div>
       </main>
 
-      {detail
-        ? <DetailPanel item={detail} onClose={() => setDetail(null)} onSelect={setDetail} />
-        : <SessionPanel todayKey={todayKey} onOpenDay={openDay} />}
+      {panel?.type === 'resource' && <DetailPanel item={panel.item} onClose={() => setPanel(null)} onSelect={(item) => setPanel({ type: 'resource', item })} />}
+      {panel?.type === 'day' && <DayPanel dayKey={panel.key} onClose={() => setPanel(null)} onOpenDay={showDay} />}
+      {!panel && <EmptyPanel />}
 
-      {modal?.type === 'day' && <DayModal dayKey={modal.key} onClose={closeModal} onOpenDay={openDay} />}
+      <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
+    </ToastCtx.Provider>
   );
 }
