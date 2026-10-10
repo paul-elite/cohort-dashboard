@@ -17,13 +17,13 @@ const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDat
 const fromKey = (k) => new Date(k + 'T12:00:00');
 const longDate = (k) => fromKey(k).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-// Figma exports (cohort page). Width/height are each file's pixel size.
+// Resource icons (supplied SVGs, all 59 × 82).
 const ICONS = {
-  recording: { src: '/icons/recording.webp', w: 60, h: 83 },
-  font: { src: '/icons/font.webp', w: 69, h: 86 },
-  audio: { src: '/icons/audio.webp', w: 60, h: 83 },
-  zip: { src: '/icons/zip.webp', w: 70, h: 95 },
-  book: { src: '/icons/book.webp', w: 80, h: 101 },
+  recording: { src: '/icons/recording.svg', w: 59, h: 82 },
+  font: { src: '/icons/font.svg', w: 59, h: 82 },
+  audio: { src: '/icons/audio.svg', w: 59, h: 82 },
+  zip: { src: '/icons/zip.svg', w: 59, h: 82 },
+  book: { src: '/icons/book.svg', w: 59, h: 82 },
 };
 
 function load(key, fallback) {
