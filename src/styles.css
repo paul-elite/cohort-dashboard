@@ -23,6 +23,13 @@
   --rule: #c9e3f2;
   --margin: #eba69c;
 
+  /* Hairline field outlines (0.5px), one colour per state */
+  --hair: rgba(25, 26, 44, 0.18);
+  --hair-hover: rgba(25, 26, 44, 0.34);
+  --hair-focus: #0a64c8;
+  --hair-error: #d1293d;
+  --error-ink: #b42335;
+
   --fs-caption: 13px;
   --fs-ui: 14px;
   --fs-title: 16px;
@@ -50,7 +57,7 @@ body {
 h1, h2, h3, p { margin: 0; }
 button, input { font: inherit; color: inherit; }
 input:focus { outline: none; }
-button:focus-visible, a:focus-visible, input:focus-visible, label:focus-within .check {
+button:focus-visible, a:focus-visible, label:focus-within .check {
   outline: 3px solid rgba(0, 143, 255, 0.4);
   outline-offset: 2px;
 }
@@ -146,13 +153,27 @@ button.glass:hover, a.glass:hover { background: linear-gradient(180deg, #ffffff 
 .seg button { width: 42px; height: 32px; border: 0; background: transparent; border-radius: 999px; cursor: pointer; display: grid; place-items: center; color: var(--text-1); }
 .seg button:disabled { color: var(--text-4); cursor: default; }
 .seg .div { width: 1px; height: 18px; background: var(--line-2); }
+/* Input fields: no thick outlines, just a 0.5px hairline that changes with state */
 .search {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 12px;
-  background: var(--card); box-shadow: 0 0 0 1px var(--line); color: var(--text-3);
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px 0 14px; border-radius: 12px;
+  background: var(--card); color: var(--text-3);
+  box-shadow: 0 0 0 0.5px var(--hair);
+  transition: box-shadow 0.15s, color 0.15s;
 }
-.search:focus-within { box-shadow: 0 0 0 1px var(--line-2), 0 0 0 4px rgba(0,143,255,0.12); }
+.search:hover { box-shadow: 0 0 0 0.5px var(--hair-hover); }
+.search:focus-within { box-shadow: 0 0 0 0.5px var(--hair-focus); color: var(--text-2); }
+.search.filled { color: var(--text-2); }
 .search input { flex: 1; min-width: 0; border: 0; background: transparent; height: 40px; color: var(--text-1); }
 .search input::placeholder { color: var(--text-3); }
+.search input::-webkit-search-cancel-button { display: none; }
+.search .clear { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--text-3); cursor: pointer; display: grid; place-items: center; }
+.search .clear:hover { background: var(--fill); color: var(--text-1); }
+kbd { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; line-height: 1; }
+.search .hint, .adder .hint kbd {
+  display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 6px;
+  color: var(--text-3); box-shadow: 0 0 0 0.5px var(--hair);
+}
+.search:focus-within .hint { visibility: hidden; }
 .view-title { font-size: var(--fs-display); font-weight: 500; letter-spacing: -0.02em; color: var(--text-1); line-height: 1.25; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--gap); align-items: start; }
@@ -215,23 +236,75 @@ button.glass:hover, a.glass:hover { background: linear-gradient(180deg, #ffffff 
 .file .when { font-size: 12px; color: var(--text-3); line-height: 16px; margin-top: 2px; }
 .empty { padding: 0 var(--pad) 8px; color: var(--text-3); }
 
-/* To-dos: ruled notebook ------------------------------------------------------ */
-.todos { overflow: hidden; }
+/* To-dos: paper card ---------------------------------------------------------- */
+.todos { overflow: clip; background: linear-gradient(180deg, #ffffff 0%, #fdfdfe 100%); }
 .todos .card-head { margin-bottom: 8px; }
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress-label { font-size: var(--fs-caption); color: var(--text-3); white-space: nowrap; }
+.progress-track { width: 56px; height: 4px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.progress-track span { display: block; height: 100%; border-radius: 4px; background: #16a34a; transition: width 0.3s ease; }
+
 .ruled { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-.ruled li { display: flex; align-items: stretch; height: 48px; border-bottom: 1px solid var(--rule); }
+.ruled li { position: relative; display: flex; align-items: center; height: 48px; border-bottom: 1px solid var(--rule); }
 .ruled li:last-child { border-bottom: 0; }
-.ruled .gutter { width: 52px; flex: none; border-right: 1px solid var(--margin); display: grid; place-items: center; }
-.ruled .gutter button { width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; }
-.ruled li.done .gutter { background: #f0f7fc; }
-.ruled .text { flex: 1; align-self: center; padding: 0 16px; color: var(--text-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ruled li.done .text { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-4); }
-.ruled .x { width: 44px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; opacity: 0; color: var(--text-3); }
-.ruled li:hover .x, .ruled .x:focus-visible { opacity: 1; }
-.ruled input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 0 16px; color: var(--text-1); }
-.ruled input::placeholder { color: var(--text-3); }
-.add { display: flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--blue-ink); font-weight: 500; cursor: pointer; padding: 0 var(--pad) 0 12px; }
+.ruled .gutter { align-self: stretch; width: 52px; flex: none; border-right: 1px solid var(--margin); display: grid; place-items: center; color: var(--text-3); }
+.ruled .text { flex: 1; padding: 0 16px; color: var(--text-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ruled li.blank { pointer-events: none; }
+
+/* Items */
+.item { transition: background 0.15s; }
+.item:hover { background: #fafbfd; }
+.tick { width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; }
+.circle {
+  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  box-shadow: inset 0 0 0 1px var(--text-4); transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.tick:hover .circle { box-shadow: inset 0 0 0 1px var(--text-2); }
+.tick:active .circle { transform: scale(0.9); }
+.item.done .circle { background: #16a34a; box-shadow: none; }
+.item.done .text { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-4); }
+.circle.ghost { box-shadow: inset 0 0 0 1px var(--line-2); }
+.item .x { align-self: stretch; width: 44px; margin-right: 8px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; opacity: 0; color: var(--text-3); transition: opacity 0.12s; }
+.item:hover .x, .item .x:focus-visible { opacity: 1; }
+.item .x:hover { color: var(--error-ink); }
+.item.new { animation: added 1.4s ease-out; }
+@keyframes added { 0% { background: #e8f3ff; } 100% { background: transparent; } }
+.note .text { color: var(--text-3); }
+
+/* Add flow: idle */
+.adder.idle .gutter { color: var(--text-3); }
+.adder-open { flex: 1; align-self: stretch; padding: 0 16px; border: 0; background: transparent; text-align: left; color: var(--text-3); cursor: text; }
+.adder.idle:hover .gutter, .adder.idle:hover .adder-open { color: var(--blue-ink); }
+.adder-open:focus-visible { outline: none; color: var(--blue-ink); }
+.adder.idle:focus-within { background: #fafbfd; }
+
+/* Add flow: editing → field with hairline that reflects the state */
+.field {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 36px; margin: 0 8px 0 10px; padding: 0 4px 0 10px;
+  border-radius: 10px; background: #fff; box-shadow: 0 0 0 0.5px var(--hair-focus);
+  transition: box-shadow 0.15s;
+}
+.adder.is-error .field { box-shadow: 0 0 0 0.5px var(--hair-error); }
+.field[data-shake] { animation: shake 0.32s ease-in-out; }
+.adder.is-empty .field[data-shake] { animation: none; }
+.adder.is-error .field[data-shake] { animation: shake 0.32s ease-in-out; }
+@keyframes shake { 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .field[data-shake], .item.new { animation: none !important; } }
+.field input { flex: 1; min-width: 0; height: 34px; border: 0; background: transparent; padding: 0; color: var(--text-1); }
+.field input::placeholder { color: var(--text-3); }
+.counter { font-size: 12px; color: var(--text-3); }
+.adder .hint { display: flex; }
+.add-pill {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px 0 10px; border: 0; border-radius: 8px;
+  font-size: var(--fs-caption); font-weight: 500; cursor: pointer;
+  color: #fff; background: linear-gradient(180deg, #1a8ef8 0%, #006fd6 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 0 0 0.5px rgba(0,0,0,0.18);
+  transition: opacity 0.15s, background 0.15s;
+}
+.add-pill kbd { opacity: 0.8; }
+.add-pill:disabled { background: var(--fill); color: var(--text-4); box-shadow: inset 0 0 0 0.5px var(--hair); cursor: default; }
+.helper { height: 48px; }
+.helper .text { display: flex; align-items: center; gap: 6px; font-size: var(--fs-caption); color: var(--error-ink); }
 
 /* Tools -------------------------------------------------------------------------- */
 .tools { padding-bottom: var(--pad); }

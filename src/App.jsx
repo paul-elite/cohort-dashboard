@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, Book02Icon, Calendar03Icon, CalendarAdd01Icon,
   Cancel01Icon, CheckmarkCircle02Icon, Clock01Icon, DashboardSquare01Icon, DragDropVerticalIcon, FileAudioIcon,
-  FileVideoIcon, FileZipIcon, Folder01Icon, Link04Icon, MinusSignSquareIcon, Mortarboard01Icon,
+  FileVideoIcon, FileZipIcon, Folder01Icon, Link04Icon, MinusSignSquareIcon, Mortarboard01Icon, PlusSignIcon, AlertCircleIcon,
   PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon, UserAdd01Icon, UserMultiple02Icon,
   Video01Icon, Wrench01Icon,
 } from '@hugeicons/core-free-icons';
@@ -192,53 +192,99 @@ function Resources({ query, onOpen }) {
   );
 }
 
+/* ---------- To-dos: paper card with an add flow ----------
+   Add flow states: idle → editing (focused) → filled (Add enabled) → error (empty or duplicate)
+   → added (new row highlights, field stays open for the next one). Esc or blur-when-empty closes. */
+const TODO_MAX = 80;
 function Todos({ todos, setTodos, query }) {
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const [error, setError] = useState('');
+  const [shake, setShake] = useState(0);
+  const [justAdded, setJustAdded] = useState(null);
+  const [announce, setAnnounce] = useState('');
+  const inputRef = useRef(null);
+  useEffect(() => { if (editing) inputRef.current?.focus({ preventScroll: true }); }, [editing]);
+
   const q = query.trim().toLowerCase();
   const shown = todos.filter((t) => !q || t.text.toLowerCase().includes(q));
-  const open = todos.filter((t) => !t.done).length;
+  const done = todos.filter((t) => t.done).length;
+  const pct = todos.length ? Math.round((done / todos.length) * 100) : 0;
+
+  const fail = (msg) => { setError(msg); setShake((n) => n + 1); inputRef.current?.focus({ preventScroll: true }); };
   const add = () => {
     const text = draft.trim();
-    if (!text) return;
-    setTodos([...todos, { id: Date.now(), text, done: false }]);
-    setDraft('');
+    if (!text) return fail('Type something first');
+    if (todos.some((t) => !t.done && t.text.toLowerCase() === text.toLowerCase())) return fail('That\u2019s already on your list');
+    const id = Date.now();
+    setTodos([...todos, { id, text, done: false }]);
+    setDraft(''); setError(''); setJustAdded(id); setAnnounce('Added ' + text);
+    setTimeout(() => setJustAdded((cur) => (cur === id ? null : cur)), 1400);
+    inputRef.current?.focus({ preventScroll: true });
   };
-  const blanks = Math.max(0, 3 - shown.length);
+  const close = () => { setDraft(''); setError(''); setEditing(false); };
+  const toggle = (t) => { setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x))); setAnnounce((t.done ? 'Reopened ' : 'Completed ') + t.text); };
+  const remove = (t) => { setTodos(todos.filter((x) => x.id !== t.id)); setAnnounce('Removed ' + t.text); };
+
+  const fieldState = error ? 'is-error' : draft.trim() ? 'is-filled' : 'is-empty';
+  const blanks = Math.max(0, 3 - shown.length - (error ? 1 : 0));
   return (
     <section className="card todos" aria-labelledby="todo-h">
       <Rings />
       <div className="card-head">
         <h2 id="todo-h">To-dos</h2>
-        <span className="count">{open} open</span>
+        <div className="progress" aria-label={done + ' of ' + todos.length + ' done'}>
+          <span className="progress-label">{done}/{todos.length} done</span>
+          <span className="progress-track" aria-hidden="true"><span style={{ width: pct + '%' }} /></span>
+        </div>
       </div>
       <ul className="ruled">
         {shown.map((t) => (
-          <li key={t.id} className={t.done ? 'done' : ''}>
+          <li key={t.id} className={'item' + (t.done ? ' done' : '') + (justAdded === t.id ? ' new' : '')}>
             <span className="gutter">
-              <button type="button" aria-pressed={t.done} aria-label={(t.done ? 'Mark not done: ' : 'Mark done: ') + t.text}
-                onClick={() => setTodos(todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)))}>
-                {t.done ? <Icon icon={Tick02Icon} size={18} bold /> : <span style={{ width: 18, height: 18 }} />}
+              <button type="button" className="tick" aria-pressed={t.done} aria-label={(t.done ? 'Mark not done: ' : 'Mark done: ') + t.text} onClick={() => toggle(t)}>
+                <span className="circle">{t.done && <Icon icon={Tick02Icon} size={13} bold />}</span>
               </button>
             </span>
             <span className="text">{t.text}</span>
-            <button type="button" className="x" aria-label={'Remove ' + t.text} onClick={() => setTodos(todos.filter((x) => x.id !== t.id))}>
+            <button type="button" className="x" aria-label={'Remove ' + t.text} onClick={() => remove(t)}>
               <Icon icon={Cancel01Icon} size={16} />
             </button>
           </li>
         ))}
+        {shown.length === 0 && (
+          <li className="note"><span className="gutter" /><span className="text">{q ? 'No to-dos match \u201c' + query.trim() + '\u201d' : 'Nothing here yet. Add your first to-do.'}</span></li>
+        )}
+
+        {!editing ? (
+          <li className="adder idle">
+            <span className="gutter"><Icon icon={PlusSignIcon} size={18} /></span>
+            <button type="button" className="adder-open" onClick={() => setEditing(true)}>Add a to-do</button>
+          </li>
+        ) : (
+          <li className={'adder editing ' + fieldState}>
+            <span className="gutter"><span className="circle ghost" /></span>
+            <div className="field" key={shake} data-shake={shake > 0 || undefined}>
+              <label className="sr-only" htmlFor="new-todo">New to-do</label>
+              <input id="new-todo" ref={inputRef} type="text" placeholder="What needs doing?" value={draft} maxLength={TODO_MAX}
+                aria-invalid={!!error} aria-describedby={error ? 'todo-error' : undefined}
+                onChange={(e) => { setDraft(e.target.value); if (error) setError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') add(); if (e.key === 'Escape') close(); }}
+                onBlur={() => { if (!draft.trim()) close(); }} />
+              {draft.length > TODO_MAX - 20 && <span className="counter">{draft.length}/{TODO_MAX}</span>}
+              {fieldState !== 'is-filled' && <span className="hint" aria-hidden="true"><kbd>esc</kbd></span>}
+              <button type="button" className="add-pill" disabled={!draft.trim()} onMouseDown={(e) => e.preventDefault()} onClick={add}>
+                Add<kbd aria-hidden="true">↵</kbd>
+              </button>
+            </div>
+          </li>
+        )}
+        {editing && error && (
+          <li className="helper" id="todo-error" role="alert"><span className="gutter" /><span className="text"><Icon icon={AlertCircleIcon} size={16} />{error}</span></li>
+        )}
         {Array.from({ length: blanks }, (_, i) => <li key={'b' + i} className="blank" aria-hidden="true"><span className="gutter" /></li>)}
-        <li>
-          <span className="gutter" />
-          <label className="sr-only" htmlFor="new-todo">New to-do</label>
-          <input id="new-todo" type="text" placeholder="Add a new todo" value={draft}
-            onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add(); }} />
-          <button type="button" className="add" onClick={add}>
-            <Icon icon={PlusSignSquareIcon} size={18} bold />
-            Add
-          </button>
-        </li>
-        <li className="blank" aria-hidden="true"><span className="gutter" /></li>
       </ul>
+      <p className="sr-only" aria-live="polite">{announce}</p>
     </section>
   );
 }
@@ -406,6 +452,13 @@ export default function App() {
 
   useEffect(() => save('cohort-todos', todos), [todos]);
   useEffect(() => save('cohort-layout', show), [show]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) { e.preventDefault(); document.getElementById('search')?.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   const view = nav.history[nav.pos];
   useEffect(() => { document.title = `${VIEWS[view]} · Cohort | ${BRAND}`; }, [view]);
@@ -465,11 +518,15 @@ export default function App() {
       <main className="main">
         <div className="toolbar">
           <button type="button" className="glass back" aria-label="Back" disabled={nav.pos === 0} onClick={() => setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) }))}><Icon icon={ArrowLeft01Icon} size={20} /></button>
-          <label className="search">
+          <div className={'search' + (query ? ' filled' : '')}>
             <Icon icon={Search01Icon} size={18} />
-            <span className="sr-only">Search</span>
-            <input type="search" placeholder="Search anything here" value={query} onChange={(e) => setQuery(e.target.value)} />
-          </label>
+            <label className="sr-only" htmlFor="search">Search</label>
+            <input id="search" type="search" placeholder="Search anything here" value={query} onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }} />
+            {query
+              ? <button type="button" className="clear" aria-label="Clear search" onClick={() => setQuery('')}><Icon icon={Cancel01Icon} size={16} /></button>
+              : <kbd className="hint" aria-hidden="true">/</kbd>}
+          </div>
         </div>
 
         {view !== 'overview' && <h1 className="view-title">{VIEWS[view]}</h1>}
