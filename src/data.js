@@ -1,6 +1,7 @@
 // Edit these to update the dashboard.
 
 export const BRAND = 'Paulelite.me';
+export const COHORT = { name: 'DesignTales', number: 1 };
 export const MEET_LINK = 'https://meet.google.com/';
 
 export const LIVE_SESSION = {

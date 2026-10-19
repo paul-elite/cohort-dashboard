@@ -5,9 +5,9 @@ import {
   Cancel01Icon, CheckmarkCircle02Icon, Clock01Icon, DashboardSquare01Icon, DragDropVerticalIcon, FileAudioIcon,
   FileVideoIcon, FileZipIcon, Folder01Icon, Link04Icon, MinusSignSquareIcon, Mortarboard01Icon, PlusSignIcon, AlertCircleIcon,
   PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon, UserAdd01Icon, UserMultiple02Icon,
-  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon,
+  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon, PlayIcon,
 } from '@hugeicons/core-free-icons';
-import { BRAND, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS } from './data.js';
+import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS } from './data.js';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -403,6 +403,98 @@ function SessionList({ title, exclude, onOpenDay }) {
   );
 }
 
+/* ---------- Home: greeting, progress, up next and catch up (overview only) ---------- */
+const SESSION_KEYS = Object.keys(SESSIONS).sort();
+const sessionNo = (k) => SESSION_KEYS.indexOf(k) + 1;
+const daysBetween = (a, b) => Math.round((fromKey(b) - fromKey(a)) / 864e5);
+
+function Stat({ label, value, total }) {
+  const pct = total ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="card stat">
+      <p className="stat-label">{label}</p>
+      <p className="stat-value"><b>{value}</b> of {total}</p>
+      <span className="progress-track" role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={total}>
+        <span style={{ width: pct + '%' }} />
+      </span>
+    </div>
+  );
+}
+
+function Home({ todayKey, todos, opened, onOpenDay, onOpenResource, onGo }) {
+  const done = SESSION_KEYS.filter((k) => k < todayKey);
+  const upcoming = SESSION_KEYS.filter((k) => k >= todayKey).slice(0, 3);
+  const last = done[done.length - 1];
+  const recording = RESOURCES.find((r) => r.icon === 'recording');
+  const todosDone = todos.filter((t) => t.done).length;
+  const seen = RESOURCES.filter((r) => opened.includes(r.name)).length;
+
+  const when = (k) => {
+    const n = daysBetween(todayKey, k);
+    if (n === 0) return LIVE_SESSION.live && LIVE_SESSION.date === k ? ['Live now', 'live'] : ['Today', 'soon'];
+    if (n === 1) return ['Tomorrow', 'soon'];
+    return ['In ' + n + ' days', ''];
+  };
+
+  return (
+    <div className="home">
+      <header className="hello">
+        <h1>Welcome back</h1>
+        <p>{done.length} of {SESSION_KEYS.length} sessions done · {COHORT.name} Cohort #{COHORT.number}</p>
+      </header>
+
+      <div className="stats">
+        <Stat label="Sessions done" value={done.length} total={SESSION_KEYS.length} />
+        <Stat label="To-dos done" value={todosDone} total={todos.length} />
+        <Stat label="Resources opened" value={seen} total={RESOURCES.length} />
+      </div>
+
+      <div className="home-lists">
+        <section aria-labelledby="next-h">
+          <div className="section-head">
+            <h2 id="next-h">Up next</h2>
+            <button type="button" className="text-link" onClick={() => onGo('calendar')}>Calendar</button>
+          </div>
+          <ul className="card upnext">
+            {upcoming.length === 0 && <li className="none">That was the last session. Well done.</li>}
+            {upcoming.map((k) => {
+              const [label, tone] = when(k);
+              return (
+                <li key={k}>
+                  <button type="button" onClick={() => onOpenDay(k)}>
+                    <span className="un-text">
+                      <span className="un-title">{SESSIONS[k].title}</span>
+                      <span className="un-meta">Session {sessionNo(k)} · {fromKey(k).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                    </span>
+                    <span className={'pill ' + tone}>{tone === 'live' && <span className="pulse" aria-hidden="true" />}{label}</span>
+                    <Icon icon={ArrowRight01Icon} size={16} className="go" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {last && recording && (
+          <section aria-labelledby="catch-h">
+            <div className="section-head"><h2 id="catch-h">Catch up</h2></div>
+            <button type="button" className="card catchup" onClick={() => onOpenResource(recording)}>
+              <span className="catch-stage">
+                <FileArt icon="recording" />
+                <span className="play" aria-hidden="true"><Icon icon={PlayIcon} size={20} bold /></span>
+              </span>
+              <span className="catch-foot">
+                <span className="eyebrow">Session {sessionNo(last)} recording</span>
+                <span className="catch-title">{SESSIONS[last].title}</span>
+              </span>
+            </button>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* Day details: shown in the right-hand panel when a calendar day is clicked */
 function DayPanel({ dayKey, onClose, onOpenDay }) {
   const toast = useToast();
@@ -411,7 +503,7 @@ function DayPanel({ dayKey, onClose, onOpenDay }) {
   const s = SESSIONS[dayKey];
   const d = fromKey(dayKey);
   const next = Object.keys(SESSIONS).sort().find((k) => k > dayKey);
-  const isLive = LIVE_SESSION.live && dayKey === LIVE_SESSION.date;
+  const isLive = LIVE_SESSION.live && dayKey === LIVE_SESSION.date && dayKey === keyOf(new Date());
   useEffect(() => {
     ref.current?.scrollTo?.({ top: 0 });
     if (window.innerWidth <= 1280) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -544,6 +636,8 @@ export default function App() {
   const dismiss = useCallback((id) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
   const toast = useCallback((t) => setToasts((cur) => [...cur.slice(-2), { id: Date.now() + Math.random(), ...t }]), []);
 
+  const [opened, setOpened] = useState(() => load('cohort-opened', []));
+  useEffect(() => save('cohort-opened', opened), [opened]);
   useEffect(() => save('cohort-todos', todos), [todos]);
   useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
@@ -566,11 +660,16 @@ export default function App() {
   const visible = (k) => (view === 'overview' ? show[k] : view === k);
   const openDay = (key) => setPanel((cur) => (cur?.type === 'day' && cur.key === key ? null : { type: 'day', key }));
   const showDay = (key) => setPanel({ type: 'day', key });
-  const openResource = (item) => setPanel((cur) => (cur?.type === 'resource' && cur.item.name === item.name ? null : { type: 'resource', item }));
+  const markOpened = (item) => setOpened((cur) => (cur.includes(item.name) ? cur : [...cur, item.name]));
+  const openResource = (item) => {
+    markOpened(item);
+    setPanel((cur) => (cur?.type === 'resource' && cur.item.name === item.name ? null : { type: 'resource', item }));
+  };
+  const showResource = (item) => { markOpened(item); setPanel({ type: 'resource', item }); };
 
   // Live session announcement, once per browser session
   useEffect(() => {
-    if (!LIVE_SESSION.live) return;
+    if (!LIVE_SESSION.live || LIVE_SESSION.date !== todayKey) return;
     try { if (sessionStorage.getItem('live-toast')) return; sessionStorage.setItem('live-toast', '1'); } catch (e) { /* storage unavailable */ }
     const t = setTimeout(() => toast({
       tone: 'live', icon: Video01Icon, duration: Infinity,
@@ -581,21 +680,35 @@ export default function App() {
   }, []);
 
   const open = todos.filter((t) => !t.done).length;
-  const navItems = [['overview', 'Overview'], ['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']];
+  const navGroups = [
+    [null, [['overview', 'Overview']]],
+    ['Cohort', [['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']]],
+  ];
   const layoutItems = [['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools']];
 
   return (
     <ToastCtx.Provider value={toast}>
     <div className="app">
       <nav className="sidebar" aria-label="Main">
-        <a className="logo" href="/">{BRAND}</a>
+        <div className="brand">
+          <a className="logo" href="/">{BRAND}</a>
+          <div className="cohort-id">
+            <span className="cohort-mark" aria-hidden="true"><Icon icon={Mortarboard01Icon} size={18} bold /></span>
+            <span><b>{COHORT.name}</b>Cohort #{COHORT.number}</span>
+          </div>
+        </div>
 
         <div className="nav">
-          {navItems.map(([k, label, count]) => (
-            <button key={k} type="button" className="nav-item" aria-current={view === k ? 'page' : undefined} onClick={() => go(k)}>
-              <Icon icon={NAV_ICONS[k]} size={20} bold={view === k} /><span>{label}</span>
-              {count !== undefined && <span className="count mono">{count}</span>}
-            </button>
+          {navGroups.map(([group, items]) => (
+            <div key={group || 'top'} className="nav-group" role="group" aria-label={group || undefined}>
+              {group && <span className="nav-label">{group}</span>}
+              {items.map(([k, label, count]) => (
+                <button key={k} type="button" className="nav-item" aria-current={view === k ? 'page' : undefined} onClick={() => go(k)}>
+                  <Icon icon={NAV_ICONS[k]} size={20} bold={view === k} /><span>{label}</span>
+                  {count !== undefined && <span className="count mono">{count}</span>}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
 
@@ -638,7 +751,7 @@ export default function App() {
         </div>
 
         {view !== 'overview' && <h1 className="view-title">{VIEWS[view]}</h1>}
-        {view === 'overview' && <h1 className="sr-only">Overview</h1>}
+        {view === 'overview' && <Home todayKey={todayKey} todos={todos} opened={opened} onOpenDay={showDay} onOpenResource={showResource} onGo={go} />}
 
         <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
           {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
