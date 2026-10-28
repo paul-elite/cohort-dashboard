@@ -3,9 +3,10 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon, ArrowRight01Icon, ArrowUpRight01Icon, Book02Icon, Calendar03Icon, CalendarAdd01Icon,
   Cancel01Icon, CheckmarkCircle02Icon, Clock01Icon, DashboardSquare01Icon, DragDropVerticalIcon, FileAudioIcon,
-  FileVideoIcon, FileZipIcon, Folder01Icon, Link04Icon, MinusSignSquareIcon, Mortarboard01Icon, PlusSignIcon, AlertCircleIcon,
-  PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon, UserAdd01Icon, UserMultiple02Icon,
-  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon, PlayIcon,
+  FileVideoIcon, FileZipIcon, Folder01Icon, GridViewIcon, Link04Icon, ListViewIcon, MinusSignSquareIcon, Mortarboard01Icon,
+  PlusSignIcon, AlertCircleIcon, SparklesIcon, PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon,
+  UserAdd01Icon, UserMultiple02Icon,
+  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon,
 } from '@hugeicons/core-free-icons';
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS } from './data.js';
 
@@ -403,95 +404,125 @@ function SessionList({ title, exclude, onOpenDay }) {
   );
 }
 
-/* ---------- Home: greeting, progress, up next and catch up (overview only) ---------- */
+/* ---------- Home: the cohort archive, one card per session (overview only) ---------- */
 const SESSION_KEYS = Object.keys(SESSIONS).sort();
 const sessionNo = (k) => SESSION_KEYS.indexOf(k) + 1;
-const daysBetween = (a, b) => Math.round((fromKey(b) - fromKey(a)) / 864e5);
 
-function Stat({ label, value, total }) {
-  const pct = total ? Math.round((value / total) * 100) : 0;
-  return (
-    <div className="card stat">
-      <p className="stat-label">{label}</p>
-      <p className="stat-value"><b>{value}</b> of {total}</p>
-      <span className="progress-track" role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={total}>
-        <span style={{ width: pct + '%' }} />
+/* Cover art per session, in chronological order. Each is a small typographic
+   or geometric specimen, in the spirit of a magazine cover. */
+const COVERS = ['type', 'color', 'screen', 'wire', 'motion', 'demo'];
+
+function CoverArt({ kind }) {
+  if (kind === 'type') {
+    return (
+      <span className="sess-art type" aria-hidden="true">
+        <span className="aa">Aa</span>
+        <span className="rule"><i style={{ width: '100%' }} /><i style={{ width: '74%' }} /><i style={{ width: '88%' }} /></span>
       </span>
-    </div>
+    );
+  }
+  if (kind === 'color') {
+    return (
+      <span className="sess-art color" aria-hidden="true">
+        <span className="swatch">
+          {['#191a2c', '#46475e', '#6e6f88', '#a6a7bb', '#0A84FF', '#ececf2'].map((c) => <i key={c} style={{ background: c }} />)}
+        </span>
+      </span>
+    );
+  }
+  if (kind === 'screen') {
+    return <span className="sess-art screen" aria-hidden="true">{[0, 1, 2, 3].map((i) => <i key={i} />)}</span>;
+  }
+  if (kind === 'wire') {
+    return (
+      <span className="sess-art wire" aria-hidden="true">
+        <span className="frame"><i className="l1" /><i className="l2" /><i className="l3" /></span>
+      </span>
+    );
+  }
+  if (kind === 'motion') {
+    return (
+      <span className="sess-art motion" aria-hidden="true">
+        <span className="track"><i className="d1" /><i className="d2" /><i className="d3" /></span>
+        <span className="ticks"><em>0</em><em>150ms</em><em>300ms</em></span>
+      </span>
+    );
+  }
+  return (
+    <span className="sess-art demo" aria-hidden="true">
+      <span className="type">Demo<br />day</span>
+      <span className="stub">Live · 5:00 PM</span>
+    </span>
   );
 }
 
-function Home({ todayKey, todos, opened, onOpenDay, onOpenResource, onGo }) {
+function Home({ todayKey, onOpenDay }) {
   const done = SESSION_KEYS.filter((k) => k < todayKey);
-  const upcoming = SESSION_KEYS.filter((k) => k >= todayKey).slice(0, 3);
   const last = done[done.length - 1];
-  const recording = RESOURCES.find((r) => r.icon === 'recording');
-  const todosDone = todos.filter((t) => t.done).length;
-  const seen = RESOURCES.filter((r) => opened.includes(r.name)).length;
+  const next = SESSION_KEYS.find((k) => k >= todayKey);
+  const [mode, setMode] = useState(() => load('cohort-home-view', 'grid'));
+  const [filter, setFilter] = useState('all');
+  useEffect(() => save('cohort-home-view', mode), [mode]);
 
-  const when = (k) => {
-    const n = daysBetween(todayKey, k);
-    if (n === 0) return LIVE_SESSION.live && LIVE_SESSION.date === k ? ['Live now', 'live'] : ['Today', 'soon'];
-    if (n === 1) return ['Tomorrow', 'soon'];
-    return ['In ' + n + ' days', ''];
-  };
+  const keys = [...SESSION_KEYS].reverse().filter((k) => (
+    filter === 'all' ? true : filter === 'done' ? k < todayKey : k >= todayKey
+  ));
 
   return (
-    <div className="home">
-      <header className="hello">
-        <h1>Welcome back</h1>
-        <p>{done.length} of {SESSION_KEYS.length} sessions done · {COHORT.name} Cohort #{COHORT.number}</p>
+    <section className="sessions" aria-labelledby="sessions-h">
+      <header className="sessions-head">
+        <div>
+          <h1 id="sessions-h">Sessions</h1>
+          <p>{done.length} of {SESSION_KEYS.length} complete · {COHORT.name} Cohort #{COHORT.number}</p>
+        </div>
+        <span className="count-pill" aria-label={SESSION_KEYS.length + ' sessions'}>{SESSION_KEYS.length}</span>
       </header>
 
-      <div className="stats">
-        <Stat label="Sessions done" value={done.length} total={SESSION_KEYS.length} />
-        <Stat label="To-dos done" value={todosDone} total={todos.length} />
-        <Stat label="Resources opened" value={seen} total={RESOURCES.length} />
+      <div className="sessions-bar">
+        <div className="sess-seg" role="group" aria-label="Filter sessions">
+          {[['all', 'All'], ['done', 'Done'], ['upcoming', 'Upcoming']].map(([k, label]) => (
+            <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}>{label}</button>
+          ))}
+        </div>
+        <div className="sess-seg view" role="group" aria-label="Session layout">
+          <button type="button" aria-pressed={mode === 'grid'} aria-label="Grid view" onClick={() => setMode('grid')}><Icon icon={GridViewIcon} size={16} /></button>
+          <button type="button" aria-pressed={mode === 'list'} aria-label="List view" onClick={() => setMode('list')}><Icon icon={ListViewIcon} size={16} /></button>
+        </div>
       </div>
 
-      <div className="home-lists">
-        <section aria-labelledby="next-h">
-          <div className="section-head">
-            <h2 id="next-h">Up next</h2>
-            <button type="button" className="text-link" onClick={() => onGo('calendar')}>Calendar</button>
-          </div>
-          <ul className="card upnext">
-            {upcoming.length === 0 && <li className="none">That was the last session. Well done.</li>}
-            {upcoming.map((k) => {
-              const [label, tone] = when(k);
-              return (
-                <li key={k}>
-                  <button type="button" onClick={() => onOpenDay(k)}>
-                    <span className="un-text">
-                      <span className="un-title">{SESSIONS[k].title}</span>
-                      <span className="un-meta">Session {sessionNo(k)} · {fromKey(k).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                    </span>
-                    <span className={'pill ' + tone}>{tone === 'live' && <span className="pulse" aria-hidden="true" />}{label}</span>
-                    <Icon icon={ArrowRight01Icon} size={16} className="go" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        {last && recording && (
-          <section aria-labelledby="catch-h">
-            <div className="section-head"><h2 id="catch-h">Catch up</h2></div>
-            <button type="button" className="card catchup" onClick={() => onOpenResource(recording)}>
-              <span className="catch-stage">
-                <FileArt icon="recording" />
-                <span className="play" aria-hidden="true"><Icon icon={PlayIcon} size={20} bold /></span>
-              </span>
-              <span className="catch-foot">
-                <span className="eyebrow">Session {sessionNo(last)} recording</span>
-                <span className="catch-title">{SESSIONS[last].title}</span>
-              </span>
-            </button>
-          </section>
-        )}
-      </div>
-    </div>
+      <ul className={'session-grid ' + mode}>
+        {keys.map((k) => {
+          const s = SESSIONS[k];
+          const badge = k === next
+            ? ['Next', 'next', SparklesIcon]
+            : k === last ? ['New', 'new', SparklesIcon] : null;
+          return (
+            <li key={k}>
+              <button type="button" className="session-card" onClick={() => onOpenDay(k)}>
+                <span className="list-no" aria-hidden="true">{pad(sessionNo(k))}</span>
+                <span className="sess-cover">
+                  <span className="sess-top">
+                    {badge
+                      ? <span className={'sess-badge ' + badge[1]}><Icon icon={badge[2]} size={13} bold />{badge[0]}</span>
+                      : <span />}
+                    <span className="sess-issue">Session {pad(sessionNo(k))}</span>
+                  </span>
+                  <span className="sess-body"><CoverArt kind={COVERS[SESSION_KEYS.indexOf(k) % COVERS.length]} /></span>
+                  <span className="sess-tags">
+                    {s.tags.map((t) => <span key={t.label} className="sess-tag"><i style={{ background: t.color }} />{t.label}</span>)}
+                  </span>
+                </span>
+                <span className="session-lines">
+                  <span className="session-name">{s.title}</span>
+                  <span className="session-sub">{fromKey(k).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} · {s.time}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {keys.length === 0 && <p className="sessions-empty">Nothing here yet.</p>}
+    </section>
   );
 }
 
@@ -688,7 +719,7 @@ export default function App() {
 
   return (
     <ToastCtx.Provider value={toast}>
-    <div className="app">
+    <div className={'app' + (!panel && view === 'overview' ? ' archive' : '')}>
       <nav className="sidebar" aria-label="Main">
         <div className="brand">
           <a className="logo" href="/">{BRAND}</a>
@@ -751,7 +782,7 @@ export default function App() {
         </div>
 
         {view !== 'overview' && <h1 className="view-title">{VIEWS[view]}</h1>}
-        {view === 'overview' && <Home todayKey={todayKey} todos={todos} opened={opened} onOpenDay={showDay} onOpenResource={showResource} onGo={go} />}
+        {view === 'overview' && <Home todayKey={todayKey} onOpenDay={showDay} />}
 
         <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
           {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
@@ -763,7 +794,7 @@ export default function App() {
 
       {panel?.type === 'resource' && <DetailPanel item={panel.item} onClose={() => setPanel(null)} onSelect={(item) => setPanel({ type: 'resource', item })} />}
       {panel?.type === 'day' && <DayPanel dayKey={panel.key} onClose={() => setPanel(null)} onOpenDay={showDay} />}
-      {!panel && <EmptyPanel />}
+      {!panel && view !== 'overview' && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
