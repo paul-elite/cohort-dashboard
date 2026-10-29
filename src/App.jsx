@@ -376,13 +376,22 @@ function Tools() {
   );
 }
 
-function EmptyPanel() {
+function EmptyPanel({ view }) {
+  const session = view.startsWith('session:');
+  const copy = view === 'overview'
+    ? ['Nothing selected', 'Pick a session to see its date, recording and resources here.']
+    : session
+      ? ['Nothing selected', 'Use Session details to see this session\u2019s date, meet link and files.']
+      : view === 'resources'
+        ? ['Nothing selected', 'Choose a file to preview its details here.']
+        : ['Nothing selected', 'Click a day on the calendar or a resource to see its details here.'];
   return (
     <aside className="panel empty-panel" aria-label="Details">
+      <div className="panel-top"><span className="eyebrow">Details</span></div>
       <div className="empty-state">
         <span className="empty-icon"><Icon icon={CursorPointer01Icon} size={28} /></span>
-        <h3>Nothing selected</h3>
-        <p>Click a day on the calendar or a resource to see its details here.</p>
+        <h3>{copy[0]}</h3>
+        <p>{copy[1]}</p>
       </div>
     </aside>
   );
@@ -701,7 +710,7 @@ export default function App() {
 
   return (
     <ToastCtx.Provider value={toast}>
-    <div className={'app' + (!panel && (view === 'overview' || isSession) ? ' archive' : '')}>
+    <div className="app">
       <nav className="sidebar" aria-label="Main">
         <div className="brand">
           <a className="logo" href="/">{BRAND}</a>
@@ -791,7 +800,7 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
-      {!panel && view !== 'overview' && !isSession && <EmptyPanel />}
+      {!panel && <EmptyPanel view={view} />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
