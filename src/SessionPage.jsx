@@ -39,7 +39,7 @@ function Saccade({ text }) {
         ))}
       </p>
       <div className="sp-saccade-foot">
-        <span className="sp-count">Fixation {step + 1} of {marks.length} · ~230ms</span>
+        <span className="sp-count">Fixation {step + 1} of {marks.length}</span>
         <span className="sp-dots" aria-hidden="true">
           {marks.map((_, i) => <i key={i} className={i <= step ? 'on' : undefined} />)}
         </span>
@@ -58,10 +58,10 @@ function Saccade({ text }) {
 /* ---------- The reading lab ---------- */
 function ReadingLab({ sample }) {
   const [serif, setSerif] = useState(false);
-  const [size, setSize] = useState(17);
-  const [measure, setMeasure] = useState(62);
+  const [size, setSize] = useState(18);
+  const [measure, setMeasure] = useState(66);
   const [lead, setLead] = useState(1.55);
-  const [fit, setFit] = useState(62);
+  const [fit, setFit] = useState(66);
   const sampleRef = useRef(null);
 
   // How many characters really fit on a line: the requested measure, or the
@@ -86,9 +86,8 @@ function ReadingLab({ sample }) {
 
   const words = sample.trim().split(/\s+/).length;
   const perLine = Math.max(4, Math.round(fit / 5.6));
-  const minutes = Math.max(1, Math.round(words / 200));
 
-  const reset = () => { setSerif(false); setSize(17); setMeasure(62); setLead(1.55); };
+  const reset = () => { setSerif(false); setSize(18); setMeasure(66); setLead(1.55); };
 
   return (
     <div className="sp-lab">
@@ -129,8 +128,8 @@ function ReadingLab({ sample }) {
           {sample}
         </p>
         <p className="sp-readout">
-          <span>≈ {fit} characters · {perLine} words a line · {words} words</span>
-          <span>{minutes} min at 200 wpm</span>
+          <span>≈ {fit} characters · 45–75 recommended</span>
+          <span>{perLine} words a line · {words} words</span>
         </p>
       </div>
     </div>
@@ -182,6 +181,8 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
           <span className="sp-sep" aria-hidden="true" />
           <span>{COHORT.name} Cohort #{COHORT.number}</span>
         </div>
+
+        {page.source && <p className="sp-source">{page.source}</p>}
       </header>
 
       <section className="sp-sec" aria-labelledby="sp-sec-1">
@@ -196,16 +197,22 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
       <section className="sp-sec" aria-labelledby="sp-sec-2">
         <div className="sp-sec-head">
           <span className="sp-num">02</span>
-          <h2 id="sp-sec-2">Measure, leading, then typeface</h2>
+          <h2 id="sp-sec-2">The equilateral triangle</h2>
         </div>
         <p className="sp-lede">{page.labIntro}</p>
+        {page.quote && (
+          <blockquote className="sp-quote">
+            <p>{page.quote.text}</p>
+            <cite>{page.quote.cite}</cite>
+          </blockquote>
+        )}
         <ReadingLab sample={page.excerpt} />
       </section>
 
       <section className="sp-sec" aria-labelledby="sp-sec-3">
         <div className="sp-sec-head">
           <span className="sp-num">03</span>
-          <h2 id="sp-sec-3">Three things to take away</h2>
+          <h2 id="sp-sec-3">Four things to take away</h2>
         </div>
         <ol className="sp-notes">
           {page.notes.map((note, i) => (
