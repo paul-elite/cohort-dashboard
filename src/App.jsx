@@ -11,10 +11,11 @@ import {
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
 import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
+import TypeAnatomy from './TypeAnatomy.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools' };
+const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools', anatomy: 'Type anatomy' };
 const pad = (n) => String(n).padStart(2, '0');
 const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = (k) => new Date(k + 'T12:00:00');
@@ -42,7 +43,7 @@ function save(key, value) {
 function Icon({ icon, size = 20, bold = false, ...rest }) {
   return <HugeiconsIcon icon={icon} size={size} color="currentColor" strokeWidth={bold ? 2 : 1} absoluteStrokeWidth={!bold} aria-hidden="true" focusable="false" {...rest} />;
 }
-const NAV_ICONS = { overview: DashboardSquare01Icon, calendar: Calendar03Icon, resources: Folder01Icon, todos: CheckmarkCircle02Icon, tools: Wrench01Icon };
+const NAV_ICONS = { overview: DashboardSquare01Icon, calendar: Calendar03Icon, resources: Folder01Icon, todos: CheckmarkCircle02Icon, tools: Wrench01Icon, anatomy: TextFontIcon };
 const KIND_ICONS = { recording: FileVideoIcon, font: TextFontIcon, audio: FileAudioIcon, zip: FileZipIcon, book: Book02Icon };
 
 function downloadIcs(key, s) {
@@ -634,8 +635,8 @@ export default function App() {
   useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) { e.preventDefault(); document.getElementById('search')?.focus(); }
-      if (e.key === 'Escape' && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || '')) setPanel(null);
+      if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) { e.preventDefault(); document.getElementById('search')?.focus(); }
+      if (e.key === 'Escape' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) setPanel(null);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -689,13 +690,13 @@ export default function App() {
   const open = todos.filter((t) => !t.done).length;
   const navGroups = [
     [null, [['overview', 'Overview']]],
-    ['Cohort', [['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']]],
+    ['Cohort', [['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools'], ['anatomy', 'Type anatomy']]],
   ];
   const layoutItems = [['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools']];
 
   return (
     <ToastCtx.Provider value={toast}>
-    <div className="app">
+    <div className={'app' + (view === 'anatomy' ? ' anatomy-view' : '')}>
       <nav className="sidebar" aria-label="Main">
         <div className="brand">
           <a className="logo" href="/">{BRAND}</a>
@@ -712,7 +713,7 @@ export default function App() {
               {items.map(([k, label, count]) => {
                 const current = view === k || (isSession && k === 'overview');
                 return (
-                  <button key={k} type="button" className="nav-item" aria-current={current ? 'page' : undefined} onClick={() => go(k)}>
+                  <button key={k} type="button" className="nav-item" aria-current={current ? 'page' : undefined} onClick={() => { setPanel(null); go(k); }}>
                     <Icon icon={NAV_ICONS[k]} size={20} bold={current} /><span>{label}</span>
                     {count !== undefined && <span className="count mono">{count}</span>}
                   </button>
@@ -761,12 +762,13 @@ export default function App() {
         </div>
 
         {view !== 'overview' && !isSession && <h1 className="view-title">{VIEWS[view]}</h1>}
+        {view === 'anatomy' && <TypeAnatomy query={query} />}
         {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
         {isSession && SESSION_PAGES[sessionKey] && (
           <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
         )}
 
-        {!isSession && (
+        {!isSession && view !== 'anatomy' && (
           <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
             {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
             {visible('resources') && <Resources query={query} onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} />}
@@ -785,7 +787,7 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
-      {!panel && <EmptyPanel />}
+      {!panel && view !== 'anatomy' && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
