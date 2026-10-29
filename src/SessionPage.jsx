@@ -61,6 +61,7 @@ function ReadingLab({ sample }) {
   const [size, setSize] = useState(18);
   const [measure, setMeasure] = useState(66);
   const [lead, setLead] = useState(1.55);
+  const [grid, setGrid] = useState(false);
   const [fit, setFit] = useState(66);
   const sampleRef = useRef(null);
 
@@ -115,23 +116,111 @@ function ReadingLab({ sample }) {
       </div>
 
       <div className="sp-lab-page">
-        <p
-          className="sp-sample"
-          ref={sampleRef}
-          style={{
-            fontFamily: serif ? "Georgia, 'Times New Roman', serif" : undefined,
-            fontSize: size,
-            lineHeight: lead,
-            maxWidth: measure + 'ch',
-          }}
+        <div
+          className="sp-sample-wrap"
+          style={{ fontSize: size, lineHeight: lead, maxWidth: measure + 'ch', '--lh': `${size * lead}px` }}
         >
-          {sample}
-        </p>
+          <p className="sp-sample" ref={sampleRef} style={{ fontFamily: serif ? "Georgia, 'Times New Roman', serif" : undefined }}>
+            {sample}
+          </p>
+          {grid && <span className="sp-gridlines" aria-hidden="true" />}
+        </div>
         <p className="sp-readout">
           <span>≈ {fit} characters · 45–75 recommended</span>
           <span>{perLine} words a line · {words} words</span>
+          <button type="button" className="sp-grid-toggle" aria-pressed={grid} onClick={() => setGrid((g) => !g)}>
+            <span className="sp-grid-swatch" aria-hidden="true" />
+            Baseline grid
+          </button>
         </p>
+        {grid && (
+          <p className="sp-caption">
+            One line height, repeated. On the web the line box is measured mid-line, so the grid sits between the lines —
+            and every heading leading and margin should be a multiple of it.
+          </p>
+        )}
       </div>
+    </div>
+  );
+}
+
+/* ---------- Same size, different presence (Chapter 2) ---------- */
+function Specimen({ specimen }) {
+  const [heights, setHeights] = useState({});
+  const faces = specimen.faces;
+
+  useEffect(() => {
+    let alive = true;
+    const measure = () => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      const next = {};
+      faces.forEach((f) => {
+        ctx.font = `100px ${f.stack}`;
+        const m = ctx.measureText('x');
+        next[f.name] = +((m.actualBoundingBoxAscent / 100) * 17).toFixed(1);
+      });
+      if (alive) setHeights(next);
+    };
+    measure();
+    if (document.fonts?.ready) document.fonts.ready.then(measure).catch(() => {});
+    return () => { alive = false; };
+  }, [faces]);
+
+  return (
+    <div className="sp-specimen">
+      <div className="sp-faces">
+        {faces.map((f) => (
+          <figure className="sp-face" key={f.name}>
+            <figcaption className="sp-face-top">
+              <span className="sp-face-name">{f.name}</span>
+              <span className="sp-face-kind">{f.kind}</span>
+            </figcaption>
+            <p className="sp-face-text" style={{ fontFamily: f.stack }}>{specimen.sample}</p>
+            <p className="sp-face-foot mono">{heights[f.name] ? `x-height ${heights[f.name]}px` : 'x-height —'}</p>
+            <p className="sp-face-note">{f.note}</p>
+          </figure>
+        ))}
+      </div>
+      <p className="sp-caption">{specimen.caption}</p>
+    </div>
+  );
+}
+
+/* ---------- Left or justified (Chapter 6) ---------- */
+function JustifyDemo({ demo }) {
+  const [justify, setJustify] = useState(false);
+  return (
+    <div className="sp-justify">
+      <div className="sp-justify-head">
+        <span className="sp-justify-label">Alignment</span>
+        <div className="sp-seg" role="group" aria-label="Text alignment">
+          <button type="button" aria-pressed={!justify} onClick={() => setJustify(false)}>Left</button>
+          <button type="button" aria-pressed={justify} onClick={() => setJustify(true)}>Justify</button>
+        </div>
+      </div>
+      <p className="sp-justify-text" style={{ textAlign: justify ? 'justify' : 'left' }}>{demo.text}</p>
+      <p className="sp-caption">{justify ? demo.justified : demo.left}</p>
+    </div>
+  );
+}
+
+/* ---------- The modular scale (Chapters 7 and 9) ---------- */
+function ScaleRamp({ scale }) {
+  return (
+    <div className="sp-scale">
+      <div className="sp-scale-head">
+        <span className="sp-scale-ratio">{scale.ratio}</span>
+        <span className="sp-scale-formula mono">{scale.formula}</span>
+      </div>
+      <ol className="sp-scale-list">
+        {scale.steps.map((step) => (
+          <li key={step.px}>
+            <span className="sp-scale-sample" style={{ fontSize: `${step.px}px` }}>Aa</span>
+            <span className="sp-scale-role">{step.role}</span>
+            <span className="sp-scale-px mono">{step.px}px</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -189,6 +278,7 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         <div className="sp-sec-head">
           <span className="sp-num">01</span>
           <h2 id="sp-sec-1">The eye doesn&rsquo;t glide</h2>
+          <span className="sp-chapter">Ch. 4</span>
         </div>
         <p className="sp-lede">{page.intro}</p>
         <Saccade text={page.saccade} />
@@ -198,6 +288,7 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         <div className="sp-sec-head">
           <span className="sp-num">02</span>
           <h2 id="sp-sec-2">The equilateral triangle</h2>
+          <span className="sp-chapter">Ch. 4</span>
         </div>
         <p className="sp-lede">{page.labIntro}</p>
         {page.quote && (
@@ -212,14 +303,73 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
       <section className="sp-sec" aria-labelledby="sp-sec-3">
         <div className="sp-sec-head">
           <span className="sp-num">03</span>
-          <h2 id="sp-sec-3">Four things to take away</h2>
+          <h2 id="sp-sec-3">Same size, different presence</h2>
+          <span className="sp-chapter">Ch. 2</span>
+        </div>
+        <p className="sp-lede">{page.specimen.lede}</p>
+        <Specimen specimen={page.specimen} />
+        <div className="sp-pair">
+          {page.specimen.points.map((point) => (
+            <div key={point.title}>
+              <h4>{point.title}</h4>
+              <p>{point.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="sp-sec" aria-labelledby="sp-sec-4">
+        <div className="sp-sec-head">
+          <span className="sp-num">04</span>
+          <h2 id="sp-sec-4">Rhythm is horizontal and vertical</h2>
+          <span className="sp-chapter">Ch. 6</span>
+        </div>
+        <p className="sp-lede">{page.rhythm.lede}</p>
+        <div className="sp-rhythm">
+          {page.rhythm.columns.map((col) => (
+            <div className="sp-rhythm-col" key={col.title}>
+              <h3>{col.title}</h3>
+              <ul>
+                {col.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <JustifyDemo demo={page.rhythm.demo} />
+      </section>
+
+      <section className="sp-sec" aria-labelledby="sp-sec-5">
+        <div className="sp-sec-head">
+          <span className="sp-num">05</span>
+          <h2 id="sp-sec-5">Sizes come from a scale</h2>
+          <span className="sp-chapter">Ch. 7 &amp; 9</span>
+        </div>
+        <p className="sp-lede">{page.scale.lede}</p>
+        <ScaleRamp scale={page.scale} />
+        <div className="sp-pair">
+          {page.scale.notes.map((note) => (
+            <div key={note.title}>
+              <h4>{note.title}</h4>
+              <p>{note.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="sp-sec" aria-labelledby="sp-sec-6">
+        <div className="sp-sec-head">
+          <span className="sp-num">06</span>
+          <h2 id="sp-sec-6">Five rules to keep</h2>
         </div>
         <ol className="sp-notes">
           {page.notes.map((note, i) => (
             <li key={note.title}>
               <span className="sp-num" aria-hidden="true">{pad(i + 1)}</span>
               <div>
-                <h3>{note.title}</h3>
+                <h3>
+                  {note.title}
+                  {note.chapter && <span className="sp-note-ch">{note.chapter}</span>}
+                </h3>
                 <p>{note.body}</p>
               </div>
             </li>

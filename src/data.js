@@ -43,21 +43,80 @@ export const SESSION_PAGES = {
   '2026-10-10': {
     kicker: 'From the reading',
     dek: "We don’t read letter by letter. We read word by word, recognising shapes — and typography’s job is to make the eye’s jumps across the page as cheap as possible.",
-    intro: "Session 01 follows the opening of Chapter 4 of Matej Latin’s “Better Web Typography for a Better Web”. Latin starts with how reading actually works: not a letter-by-letter scan but word-by-word shape recognition, moved along by quick eye movements called saccades and paused by fixations, usually at the end of words. From there he builds the chapter’s central idea — the equilateral triangle of a perfect paragraph, where type size, line length and line height are three sides that only work in balance.",
+    intro: "Session 01 starts where Matej Latin starts, in Chapter 4 of “Better Web Typography for a Better Web”: with the mechanics of reading. Words are recognised as shapes, and the eye crosses a line in saccades, pausing at fixations. From there the chapter builds the equilateral triangle of a perfect paragraph — size, line length and line height as three sides that only work in balance. The rest of this page follows the book outward: how x-height changes the way a size looks, how rhythm holds a page together, and why every size should come from a scale rather than a guess.",
     saccade: "We don’t read letter by letter. We read word by word, recognising shapes we already know. Our eyes move in quick saccades, broken by fixations, usually at the end of a word.",
-    labIntro: "Set the three sides yourself: type size, measure and leading. Change one and the other two need to answer. The typeface switch is here for the old serif-versus-sans question — Latin calls the idea that sans-serif is easier to read on screen a myth. Size, line length and line height do the real work.",
+    labIntro: "Set the three sides yourself: type size, measure and leading. Change one and the other two need to answer. The typeface switch is here for the old serif-versus-sans question — Latin calls the idea that sans-serif is easier to read on screen a myth. Size, line length and line height do the real work. Turn on the baseline grid to see the unit the rest of the page is built from.",
     quote: {
       text: "It takes three things to get a perfect paragraph: font size, line height and line length. They need to be balanced.",
       cite: "Matej Latin, Better Web Typography for a Better Web",
     },
     excerpt: "A paragraph is a balance of three things: the size of the type, the length of the line and the space between the lines. None of them can be set in isolation. Make the lines too long and the eye has too few breaks; make them too short and it has to switch too often. Set the leading too tight and the lines crowd each other; too loose and they drift apart. The three sides have to match.",
+    specimen: {
+      lede: "Two paragraphs can share a size, a colour and a leading and still not look alike. One reads heavier and larger; the other lighter and smaller. Latin opens the book with the anatomy behind that: a pixel value is a starting point, not a measure of how big type looks.",
+      sample: "The quick brown fox jumps over the lazy dog. Rounded letters are drawn slightly larger so they look the same size.",
+      faces: [
+        { name: "Inter", kind: "Sans-serif", stack: "'Inter', system-ui, sans-serif", note: "A tall x-height and little stroke contrast. It reads modern, sturdy and larger than its size." },
+        { name: "Georgia", kind: "Serif", stack: "Georgia, 'Times New Roman', serif", note: "A smaller x-height and noticeable contrast. It reads classical, lighter and smaller." },
+      ],
+      caption: "Both paragraphs are 17px, in the same colour, with the same leading. The x-heights are measured in the browser, in pixels, at that size.",
+      points: [
+        { title: "Type colour isn’t colour", body: "In typography, type colour means how heavy black text looks on white. Stroke contrast, x-height and style decide it: Georgia, at the same size and weight, reads lighter than Merriweather because its strokes vary more." },
+        { title: "x-height sets apparent size", body: "Taller x-heights are considered modern and easier to read — Merriweather, Roboto, Freight Text. Smaller ones read as classical: Garamond, Baskerville, Bodoni. That is why 16px in one face can look like 18px in another." },
+      ],
+    },
+    rhythm: {
+      lede: "Latin splits rhythm into two jobs. Horizontal rhythm is the line: spacing, alignment, the flow of words. Vertical rhythm is the page: leading, margins and the grid that lets a reader scan the structure before reading a word.",
+      columns: [
+        {
+          title: "Horizontal · legibility",
+          chapter: "Ch. 6",
+          items: [
+            "Don’t letterspace lowercase body text. Goudy: “A man who would letterspace lower case would steal sheep.” It slows word recognition.",
+            "Tighten headings by 3–5%. Spacing looks optically looser at large sizes.",
+            "Open uppercase and small caps by 5–10%, so the letters stay distinguishable.",
+            "Don’t justify on the web. Browsers leave rivers of white between words; Gov.uk and dyslexia guidance both recommend left alignment.",
+          ],
+        },
+        {
+          title: "Vertical · hierarchy",
+          chapter: "Ch. 6",
+          items: [
+            "Line height is the base unit. Set every heading’s leading and every margin as a multiple of it.",
+            "Give a heading a smaller bottom margin than its top. It belongs to the text beneath it, not floating between blocks.",
+            "Let images break the grid. “Use the baseline grid as a guide, not as a restraint.”",
+          ],
+        },
+      ],
+      demo: {
+        text: "Web browsers render justified text very poorly. They don’t have the necessary algorithms to properly set the spacing between words and even individual letters. That’s why justified texts come with patches of space between the words: rivers of white between the black of text.",
+        left: "Left-aligned: the space between words stays even and every line ends clearly. This is what Latin recommends for the web.",
+        justified: "Justified: the browser stretches the spaces to fill the column, opening rivers of white through the paragraph. Hyphenation helps a little; left alignment avoids the problem.",
+      },
+    },
+    scale: {
+      lede: "A paragraph can be perfect and the page still chaotic, because there are infinite sizes to choose from. Latin’s fix is a modular scale: one base size and one ratio, so every size is related to the others. His own preference is the Perfect Fifth, 1.5.",
+      ratio: "Perfect Fifth · 1.5×",
+      formula: "1.5ⁿ × 18px",
+      steps: [
+        { px: 60.75, role: "Heading 2" },
+        { px: 40.5, role: "Heading 3" },
+        { px: 27, role: "Heading 4" },
+        { px: 18, role: "Body" },
+        { px: 12, role: "Caption" },
+      ],
+      notes: [
+        { title: "Why a scale", body: "The book’s example sizes are 8, 12, 18, 27, 40.5, 60.75, 91.125 and 136.688. Choosing from that list ends the 24-versus-25-pixel debate, and readers only have to learn a few sizes to understand the hierarchy." },
+        { title: "Why it survives mobile", body: "Only the root size changes: 16px on phones, 18px on desktop. Because every other size is relative, the scale comes along. Leading is tightened to 1.4 for the narrow column and returns to 1.45 when it widens." },
+      ],
+    },
     notes: [
-      { title: "We read word by word", body: "Letter-by-letter reading is for people still learning. Once we know the words, we recognise their shapes and move along in saccades, with fixations — usually at the end of words — doing the recognising." },
-      { title: "45 to 75 characters", body: "That is the recommended line length, spaces included. Shorter lines mean too much switching; longer ones give the eye too few pauses. Long-word languages such as German (11.66 characters a word, against 8 in English) should lean towards 75." },
-      { title: "Start at 16 and 18", body: "Body text should be at least 16px on mobile and 18–22px on desktop. Typefaces differ in apparent size — a heavy face reads larger at the same pixel size — so judge the size against a book held at arm’s length, not the number alone." },
-      { title: "Balance the three sides", body: "Line height usually sits between 1.3 and 1.6 for body text, and 1–1.2 for headings. Longer lines, larger sizes and heavier colour all need more leading. Change the measure and you have to revisit the leading: the triangle is never set once." },
+      { title: "Read the paragraph as a triangle", chapter: "Ch. 4", body: "45–75 characters including spaces, 18–22px on desktop and 1.3–1.7 leading. Change one side and the other two need revisiting: a paragraph is set, not typed." },
+      { title: "Judge size by x-height", chapter: "Ch. 2", body: "Pixels don’t tell you how big type looks. A tall x-height reads larger, darker and more modern; a small one reads classical and lighter. Set the same size in two faces and compare before choosing." },
+      { title: "Left-align, and leave lowercase alone", chapter: "Ch. 6", body: "Justified text on the web produces rivers of white and is harder for dyslexic readers. Letterspacing lowercase body text slows recognition. Save tracking for headings (3–5% tighter) and caps (5–10% wider)." },
+      { title: "Keep one rhythm unit", chapter: "Ch. 6", body: "Use line height as the base for margins and heading leading. Multiples keep the page in tune, and a smaller bottom margin than top binds a heading to its text." },
+      { title: "Choose sizes from a scale", chapter: "Ch. 7 & 9", body: "One base size and one ratio — the Perfect Fifth is 1.5 — give every size a reason. Then let the root size carry the scale from 16px on phones to 18px on desktop." },
     ],
-    source: "Adapted from “Better Web Typography for a Better Web” (2nd ed.) by Matej Latin — Chapter 4, “Equilateral Triangle of a Perfect Paragraph”.",
+    source: "Adapted from “Better Web Typography for a Better Web” (2nd ed.) by Matej Latin — Chapters 2, 4, 6, 7 and 9.",
   },
 };
 
