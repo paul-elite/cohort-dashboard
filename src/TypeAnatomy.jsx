@@ -95,7 +95,7 @@ export function AnatomyDetails({ selected }) {
   const styles = face.name === 'Georgia' ? SERIF_STYLES : STYLES;
   const style = styles[styleIndex];
   const metrics = useMetrics(face, style, selected.char);
-  return <aside className="panel detail ta-detail-panel" aria-label="Anatomy details">
+  return <section className="ta-detail-panel" aria-label="Anatomy details">
     <div className="panel-top"><span className="eyebrow">Type anatomy</span><label className="ta-guides-toggle"><input type="checkbox" checked={guides} onChange={e => setGuides(e.target.checked)} /> Guides</label></div>
     <div aria-live="polite"><span className="eyebrow">{selected.category}</span><h2>{selected.name}</h2><p className="ta-description">{selected.description}</p></div>
     <Specimen glyph={selected} face={face} style={style} metrics={metrics} guides={guides} />
@@ -105,22 +105,16 @@ export function AnatomyDetails({ selected }) {
       <div className="ta-select-row"><label htmlFor="ta-style">Font style</label><select id="ta-style" value={styleIndex} onChange={e => setStyleIndex(Number(e.target.value))}>{styles.map((s, i) => <option key={s.name} value={i}>{s.name}</option>)}</select></div>
     </div>
     <p className="ta-metric-note">Guides show visible bounds measured from h, H, x and p at 1,000 px.</p>
-  </aside>;
+  </section>;
 }
 
 export default function TypeAnatomy({ query = '', selected, onSelect }) {
   const terms = ANATOMY.filter(item => `${item.name} ${item.category} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
-  return <section className="ta-page" aria-label="Typography anatomy list">
-    <div className="ta-intro"><p>Explore the parts that make up a letter. Select a term to see its anatomy in the details panel.</p><span className="ta-total mono">{terms.length} {terms.length === 1 ? 'term' : 'terms'}</span></div>
-    {['Proportions', 'Letterforms'].map(category => {
-      const items = terms.filter(item => item.category === category);
-      return items.length > 0 && <section className="ta-group" key={category} aria-label={category}>
-        <h2>{category}<span className="mono">{items.length}</span></h2>
-        <div className="ta-term-list">{items.map(item => <button type="button" className="ta-term" key={item.name} aria-pressed={selected.name === item.name} onClick={() => onSelect(item)}>
-          <span className="ta-term-sample" aria-hidden="true">{item.char}</span><span className="ta-term-copy"><strong>{item.name}</strong><span>{item.description}</span></span><span className="ta-term-arrow" aria-hidden="true">↗</span>
-        </button>)}</div>
-      </section>;
-    })}
-    {!terms.length && <div className="ta-empty"><h2>No matching anatomy terms</h2><p>Try “ascender”, “counter” or “stroke”.</p></div>}
+  return <section className="ta-page ta-main-layout" aria-label="Interactive typography anatomy">
+    <AnatomyDetails selected={selected} />
+    <nav className="ta-terms" aria-label="Typography anatomy terms">
+      {terms.map(item => <button type="button" className="ta-term" key={item.name} aria-pressed={selected.name === item.name} onClick={() => onSelect(item)}>{item.name}</button>)}
+      {!terms.length && <p className="ta-metric-note">No matching anatomy terms.</p>}
+    </nav>
   </section>;
 }

@@ -11,7 +11,7 @@ import {
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
 import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
-import TypeAnatomy, { AnatomyDetails, ANATOMY } from './TypeAnatomy.jsx';
+import TypeAnatomy, { ANATOMY } from './TypeAnatomy.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -788,7 +788,6 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
-      {view === 'anatomy' && <AnatomyDetails selected={anatomyTerm} />}
       {!panel && view !== 'anatomy' && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
