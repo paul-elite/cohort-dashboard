@@ -1,12 +1,10 @@
-/* A quiet specimen workspace inside the existing cohort shell. */
-.app.anatomy-view { grid-template-columns: 280px minmax(0, 1fr); }
 .anatomy-view .main { padding-left: 40px; padding-right: 40px; }
 .anatomy-view .toolbar .back { position: static; }
 .ta-page { min-width: 0; }
 .ta-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin: -8px 0 32px; }
 .ta-intro p { max-width: 62ch; color: var(--text-2); line-height: 1.7; }
 .ta-total { white-space: nowrap; color: var(--text-3); padding-top: 3px; }
-.ta-workspace { display: grid; grid-template-columns: minmax(260px, 360px) minmax(0, 1fr); gap: 40px; align-items: start; }
+
 .ta-inspector { position: sticky; top: 24px; min-width: 0; }
 .ta-inspector-top, .ta-library-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 28px; margin-bottom: 14px; }
 .ta-library-top > span:last-child { color: var(--text-3); font-size: 12px; }
@@ -54,3 +52,20 @@
   .ta-total { display: none; }
   .ta-glyphs { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
 }
+
+.ta-term-list { border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; }
+.ta-term { display: flex; align-items: center; gap: 18px; width: 100%; text-align: left; padding: 18px; border: 0; border-bottom: 1px solid var(--line-2); background: var(--card); color: var(--text-1); cursor: pointer; font: inherit; }
+.ta-term:last-child { border-bottom: 0; }
+.ta-term:hover { background: var(--fill); }
+.ta-term[aria-pressed='true'] { background: var(--fill); box-shadow: inset 3px 0 var(--blue-ink); }
+.ta-term-sample { width: 40px; flex: none; font: 36px Georgia, serif; text-align: center; }
+.ta-term-copy { display: grid; gap: 5px; flex: 1; }
+.ta-term-copy strong { font-weight: 500; }
+.ta-term-copy > span { color: var(--text-3); font-size: 12px; line-height: 1.6; }
+.ta-term-arrow { color: var(--text-3); }
+.ta-detail-panel h2 { font-size: 24px; font-weight: 500; margin: 8px 0 12px; }
+.ta-description, .ta-example { color: var(--text-2); line-height: 1.7; font-size: 13px; }
+.ta-detail-panel .ta-specimen { flex: none; }
+.ta-detail-panel .ta-metric-note { margin: 0; }
+@media (min-width: 801px) { .app.anatomy-view { grid-template-columns: 240px minmax(0, 1fr) minmax(300px, 360px); } .anatomy-view .ta-detail-panel { grid-column: auto; position: sticky; height: 100vh; padding: var(--top) 24px 32px; } }
+@media (max-width: 800px) { .ta-detail-panel { position: static; height: auto; } }

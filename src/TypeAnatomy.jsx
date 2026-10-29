@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import glyphGroups from './glyphs.json';
+import { useEffect, useState } from 'react';
 import './type-anatomy.css';
 
 const FACES = [
@@ -12,8 +11,22 @@ const STYLES = [
   { name: 'Medium', weight: 500, style: 'normal' },
 ];
 const SERIF_STYLES = [STYLES[0], { name: 'Bold', weight: 700, style: 'normal' }];
-const hex = (code) => code.toString(16).toUpperCase().padStart(4, '0');
-const INITIAL = glyphGroups[0].glyphs.find((glyph) => glyph.char === 'A');
+export const ANATOMY = [
+  { name: 'Baseline', char: 'H', category: 'Proportions', description: 'The imaginary line on which most letters sit.', example: 'The bottoms of H and x rest on the baseline.' },
+  { name: 'Cap height', char: 'H', category: 'Proportions', description: 'The height of flat-topped capital letters above the baseline.', example: 'H shows the cap height; round capitals may extend slightly beyond it.' },
+  { name: 'x-height', char: 'x', category: 'Proportions', description: 'The height of the lowercase x, used to describe the main body of lowercase letters.', example: 'Compare x with h to see the difference between x-height and ascender height.' },
+  { name: 'Ascender', char: 'h', category: 'Proportions', description: 'The part of a lowercase letter that rises above the x-height.', example: 'The tall stem of h is an ascender.' },
+  { name: 'Descender', char: 'p', category: 'Proportions', description: 'The part of a letter that extends below the baseline.', example: 'The stem of p continues below the baseline.' },
+  { name: 'Stem', char: 'H', category: 'Letterforms', description: 'A principal upright or diagonal stroke of a letter.', example: 'The two vertical strokes of H are stems.' },
+  { name: 'Crossbar', char: 'A', category: 'Letterforms', description: 'A horizontal stroke joining two parts of a letter.', example: 'The horizontal stroke across A is its crossbar.' },
+  { name: 'Bowl', char: 'b', category: 'Letterforms', description: 'A curved stroke that encloses a space within a letter.', example: 'The rounded part of b forms its bowl.' },
+  { name: 'Counter', char: 'O', category: 'Letterforms', description: 'The enclosed or partially enclosed space inside a letter.', example: 'The open space inside O is its counter.' },
+  { name: 'Aperture', char: 'c', category: 'Letterforms', description: 'The opening between the ends of an open letterform.', example: 'The gap on the right of c is its aperture.' },
+  { name: 'Shoulder', char: 'n', category: 'Letterforms', description: 'A curved stroke that arches out from a stem.', example: 'The arch of n forms its shoulder.' },
+  { name: 'Serif', char: 'I', category: 'Letterforms', description: 'A small finishing stroke at the end of a main stroke in a serif typeface.', example: 'In Georgia, I has serifs at the top and bottom. Sans serif faces omit them.' },
+  { name: 'Terminal', char: 'a', category: 'Letterforms', description: 'The end of a stroke that does not finish in a serif.', example: 'The exposed stroke ending of a is a terminal; its shape varies by typeface.' },
+  { name: 'Leg', char: 'R', category: 'Letterforms', description: 'A stroke that extends downward and away from the main body of a letter.', example: 'The diagonal lower stroke of R is its leg.' },
+];
 
 function useMetrics(face, style, char) {
   const [metrics, setMetrics] = useState(null);
@@ -74,52 +87,40 @@ function Specimen({ glyph, face, style, metrics, guides }) {
   </svg>;
 }
 
-export default function TypeAnatomy({ query = '' }) {
-  const [faceIndex, setFaceIndex] = useState(0);
+export function AnatomyDetails({ selected }) {
+  const [faceIndex, setFaceIndex] = useState(1);
   const [styleIndex, setStyleIndex] = useState(0);
-  const [selected, setSelected] = useState(INITIAL);
   const [guides, setGuides] = useState(true);
   const face = FACES[faceIndex];
   const styles = face.name === 'Georgia' ? SERIF_STYLES : STYLES;
   const style = styles[styleIndex];
   const metrics = useMetrics(face, style, selected.char);
-  const groups = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    return glyphGroups.map((group) => ({ ...group, glyphs: group.glyphs.filter((g) => !term || (Array.from(term).length === 1 ? g.char.toLowerCase() === term : g.name.toLowerCase().includes(term) || `u+${hex(g.code)}`.toLowerCase().includes(term))) })).filter((group) => group.glyphs.length);
-  }, [query]);
-  const count = groups.reduce((total, group) => total + group.glyphs.length, 0);
+  return <aside className="panel detail ta-detail-panel" aria-label="Anatomy details">
+    <div className="panel-top"><span className="eyebrow">Type anatomy</span><label className="ta-guides-toggle"><input type="checkbox" checked={guides} onChange={e => setGuides(e.target.checked)} /> Guides</label></div>
+    <div aria-live="polite"><span className="eyebrow">{selected.category}</span><h2>{selected.name}</h2><p className="ta-description">{selected.description}</p></div>
+    <Specimen glyph={selected} face={face} style={style} metrics={metrics} guides={guides} />
+    <p className="ta-example">{selected.example}</p>
+    <div>
+      <div className="ta-select-row"><label htmlFor="ta-typeface">Typeface</label><select id="ta-typeface" value={faceIndex} onChange={e => setFaceIndex(Number(e.target.value))}>{FACES.map((f, i) => <option key={f.name} value={i}>{f.name}</option>)}</select></div>
+      <div className="ta-select-row"><label htmlFor="ta-style">Font style</label><select id="ta-style" value={styleIndex} onChange={e => setStyleIndex(Number(e.target.value))}>{styles.map((s, i) => <option key={s.name} value={i}>{s.name}</option>)}</select></div>
+    </div>
+    <p className="ta-metric-note">Guides show visible bounds measured from h, H, x and p at 1,000 px.</p>
+  </aside>;
+}
 
-  return <section className="ta-page" aria-label="Interactive type anatomy">
-    <div className="ta-intro">
-      <p>Explore the shapes behind the letters. Choose a character to inspect its proportions and Unicode details.</p>
-      <span className="ta-total mono">{count} {count === 1 ? 'glyph' : 'glyphs'}</span>
-    </div>
-    <div className="ta-workspace">
-      <aside className="ta-inspector" aria-label="Selected glyph">
-        <div className="ta-inspector-top"><span className="eyebrow">Glyph inspector</span><label className="ta-guides-toggle"><input type="checkbox" checked={guides} onChange={(event) => setGuides(event.target.checked)} /> Guides</label></div>
-        <Specimen glyph={selected} face={face} style={style} metrics={metrics} guides={guides} />
-        <div className="ta-select-row"><label htmlFor="ta-typeface">Typeface</label><select id="ta-typeface" value={faceIndex} onChange={(e) => setFaceIndex(Number(e.target.value))}>{FACES.map((f, i) => <option key={f.name} value={i}>{f.name}</option>)}</select></div>
-        <div className="ta-select-row"><label htmlFor="ta-style">Font style</label><select id="ta-style" value={styleIndex} onChange={(e) => setStyleIndex(Number(e.target.value))}>{styles.map((s, i) => <option key={s.name} value={i}>{s.name}</option>)}</select></div>
-        <dl className="ta-details" aria-live="polite" aria-atomic="true">
-          <div><dt>Glyph</dt><dd>{selected.code === 32 || selected.code === 160 ? 'Space' : selected.char}</dd></div>
-          <div><dt>Unicode name</dt><dd className="ta-unicode-name">{selected.name.toLowerCase()}</dd></div>
-          <div><dt>Unicode decimal</dt><dd className="mono">{selected.code}</dd></div>
-          <div><dt>Unicode hex</dt><dd className="mono">U+{hex(selected.code)}</dd></div>
-        </dl>
-        <p className="ta-metric-note">Guides measure the rendered h, H, x and p at 1,000 px. They show visible letter bounds, not the font’s internal metrics.</p>
-      </aside>
-      <div className="ta-library" style={{ '--ta-font': face.stack, '--ta-weight': style.weight }}>
-        <div className="ta-library-top"><span className="eyebrow">Character set</span><span>{face.name} <span aria-hidden="true">/</span> {style.name}</span></div>
-        {groups.map((group) => <section key={group.name} className="ta-group" aria-label={group.name}>
-          <h2>{group.name}<span className="mono">{group.glyphs.length}</span></h2>
-          <div className="ta-glyphs">
-            {group.glyphs.map((glyph) => <button type="button" key={glyph.code} className="ta-glyph" aria-pressed={selected.code === glyph.code} aria-label={`${glyph.name}, U+${hex(glyph.code)}`} title={`${glyph.name} · U+${hex(glyph.code)}`} onClick={() => setSelected(glyph)}>
-              <span aria-hidden="true">{glyph.code === 32 || glyph.code === 160 ? '␣' : glyph.char}</span>
-            </button>)}
-          </div>
-        </section>)}
-        {!count && <div className="ta-empty"><h2>No matching glyphs</h2><p>Try a letter, a Unicode name such as “capital”, or a code such as “U+0041”.</p></div>}
-      </div>
-    </div>
+export default function TypeAnatomy({ query = '', selected, onSelect }) {
+  const terms = ANATOMY.filter(item => `${item.name} ${item.category} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+  return <section className="ta-page" aria-label="Typography anatomy list">
+    <div className="ta-intro"><p>Explore the parts that make up a letter. Select a term to see its anatomy in the details panel.</p><span className="ta-total mono">{terms.length} {terms.length === 1 ? 'term' : 'terms'}</span></div>
+    {['Proportions', 'Letterforms'].map(category => {
+      const items = terms.filter(item => item.category === category);
+      return items.length > 0 && <section className="ta-group" key={category} aria-label={category}>
+        <h2>{category}<span className="mono">{items.length}</span></h2>
+        <div className="ta-term-list">{items.map(item => <button type="button" className="ta-term" key={item.name} aria-pressed={selected.name === item.name} onClick={() => onSelect(item)}>
+          <span className="ta-term-sample" aria-hidden="true">{item.char}</span><span className="ta-term-copy"><strong>{item.name}</strong><span>{item.description}</span></span><span className="ta-term-arrow" aria-hidden="true">↗</span>
+        </button>)}</div>
+      </section>;
+    })}
+    {!terms.length && <div className="ta-empty"><h2>No matching anatomy terms</h2><p>Try “ascender”, “counter” or “stroke”.</p></div>}
   </section>;
 }

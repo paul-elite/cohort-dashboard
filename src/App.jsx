@@ -11,7 +11,7 @@ import {
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
 import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
-import TypeAnatomy from './TypeAnatomy.jsx';
+import TypeAnatomy, { AnatomyDetails, ANATOMY } from './TypeAnatomy.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -621,6 +621,7 @@ export default function App() {
   const todayKey = keyOf(new Date());
   const [nav, setNav] = useState({ history: ['overview'], pos: 0 });
   const [query, setQuery] = useState('');
+  const [anatomyTerm, setAnatomyTerm] = useState(ANATOMY[0]);
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
   const [layoutOpen, setLayoutOpen] = useState(true);
@@ -762,7 +763,7 @@ export default function App() {
         </div>
 
         {view !== 'overview' && !isSession && <h1 className="view-title">{VIEWS[view]}</h1>}
-        {view === 'anatomy' && <TypeAnatomy query={query} />}
+        {view === 'anatomy' && <TypeAnatomy query={query} selected={anatomyTerm} onSelect={setAnatomyTerm} />}
         {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
         {isSession && SESSION_PAGES[sessionKey] && (
           <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
@@ -787,6 +788,7 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
+      {view === 'anatomy' && <AnatomyDetails selected={anatomyTerm} />}
       {!panel && view !== 'anatomy' && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
