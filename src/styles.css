@@ -678,11 +678,8 @@ kbd { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; line-
 
 /* Selected calendar day */
 
-/* Empty side panel (default) */
-.empty-panel { justify-content: flex-start; }
-.empty-panel .empty-state { margin: auto 0; padding-bottom: 0; }
-.empty-panel .empty-icon { background: #EEF5FF; color: var(--blue); }
-.empty-state h2 { font-size: 18px; font-weight: 500; letter-spacing: -0.015em; color: var(--text-1); line-height: 1.3; }
+/* Blank side panel (default): the column stays, the space stays empty. */
+.empty-panel { padding-bottom: 0; }
 .day-empty { padding: 24px 0 8px; }
 .day-empty .btn { margin-top: 8px; }
 @media (max-width: 1280px) { .empty-panel { display: none; } }

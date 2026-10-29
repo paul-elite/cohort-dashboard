@@ -6,7 +6,7 @@ import {
   FileVideoIcon, FileZipIcon, Folder01Icon, GridViewIcon, Link04Icon, ListViewIcon, MinusSignSquareIcon, Mortarboard01Icon,
   PlusSignIcon, AlertCircleIcon, SparklesIcon, PlusSignSquareIcon, Search01Icon, Sun03Icon, TextFontIcon, Tick02Icon,
   UserAdd01Icon, UserMultiple02Icon,
-  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon,
+  Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, PartyIcon,
 } from '@hugeicons/core-free-icons';
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
 import CoverArt from './CoverArt.jsx';
@@ -376,25 +376,10 @@ function Tools() {
   );
 }
 
-function EmptyPanel({ view }) {
-  const session = view.startsWith('session:');
-  const copy = view === 'overview'
-    ? ['Nothing selected', 'Pick a session to see its date, recording and resources here.']
-    : session
-      ? ['Nothing selected', 'Use Session details to see this session\u2019s date, meet link and files.']
-      : view === 'resources'
-        ? ['Nothing selected', 'Choose a file to preview its details here.']
-        : ['Nothing selected', 'Click a day on the calendar or a resource to see its details here.'];
-  return (
-    <aside className="panel empty-panel" aria-label="Details">
-      <div className="panel-top"><span className="eyebrow">Details</span></div>
-      <div className="empty-state">
-        <span className="empty-icon"><Icon icon={CursorPointer01Icon} size={28} /></span>
-        <h3>{copy[0]}</h3>
-        <p>{copy[1]}</p>
-      </div>
-    </aside>
-  );
+function EmptyPanel() {
+  // Desktop keeps the details column on screen even when nothing is selected.
+  // It stays blank so the layout does not move when a panel opens.
+  return <aside className="panel empty-panel" aria-hidden="true" />;
 }
 
 function SessionList({ title, exclude, onOpenDay }) {
@@ -800,7 +785,7 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
-      {!panel && <EmptyPanel view={view} />}
+      {!panel && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
