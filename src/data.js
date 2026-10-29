@@ -37,6 +37,25 @@ export const SESSIONS = {
   '2026-10-31': { title: 'Demo Day', tags: [t('Demo day', 'pink')], time: '5:00 PM WAT' },
 };
 
+// Long-form pages for individual sessions. Keys match SESSIONS; a session
+// without an entry opens the day panel instead.
+export const SESSION_PAGES = {
+  '2026-10-10': {
+    kicker: 'Field notes on reading',
+    dek: "Reading feels like one smooth sweep across the page. It's really a series of jumps, landings and guesses — and type is the set of instructions we hand the eye.",
+    intro: "We slowed the act of reading down in Session 01 to see what it is made of. The eye does not glide along a line: it stops, samples a few letters, then jumps again. Each stop lasts about a quarter of a second, and each jump lands six to nine characters ahead. Everything typography does is either helping those jumps or getting in their way.",
+    saccade: "The eye does not glide across a line of type. It jumps in short saccades, lands on a word, and pauses to recognise its shape.",
+    labIntro: "The same paragraph, set four ways. Move the sliders and watch the line do the work — the longest measure is rarely the most comfortable one.",
+    excerpt: "Good typography is mostly a matter of removing obstacles. The reader should never notice the typeface, the measure or the leading — only the sense moving forward. Give the eye short, even lines, keep the rhythm between them steady, and it will do the rest without complaint.",
+    notes: [
+      { title: 'Measure before typeface', body: 'Line length does more for reading than the choice between serif and sans. Between 45 and 75 characters the return sweep stays cheap. Past 90, readers start losing their place.' },
+      { title: 'Leading is breathing room', body: 'At 16–18px, a line height around 1.5 keeps ascenders and descenders from crowding without letting lines drift apart. Longer lines need more leading; short lines can take less.' },
+      { title: 'We read word shapes', body: 'Ascenders and descenders give words a silhouette. All-caps flattens that silhouette, which is why a long passage in capitals costs more effort than the same words in lowercase.' },
+    ],
+  },
+};
+
+
 // icon: recording | font | audio | zip | book
 export const RESOURCES = [
   { name: 'Class Recording', when: 'Just now', icon: 'recording', kind: 'Video', href: '#' },

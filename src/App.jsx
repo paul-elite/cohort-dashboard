@@ -8,7 +8,9 @@ import {
   UserAdd01Icon, UserMultiple02Icon,
   Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, CursorPointer01Icon, PartyIcon,
 } from '@hugeicons/core-free-icons';
-import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS } from './data.js';
+import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
+import CoverArt from './CoverArt.jsx';
+import SessionPage from './SessionPage.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -408,55 +410,10 @@ function SessionList({ title, exclude, onOpenDay }) {
 const SESSION_KEYS = Object.keys(SESSIONS).sort();
 const sessionNo = (k) => SESSION_KEYS.indexOf(k) + 1;
 
-/* Cover art per session, in chronological order. Each is a small typographic
-   or geometric specimen, in the spirit of a magazine cover. */
+/* Cover art per session, in chronological order. */
 const COVERS = ['type', 'color', 'screen', 'wire', 'motion', 'demo'];
 
-function CoverArt({ kind }) {
-  if (kind === 'type') {
-    return (
-      <span className="sess-art type" aria-hidden="true">
-        <span className="aa">Aa</span>
-        <span className="rule"><i style={{ width: '100%' }} /><i style={{ width: '74%' }} /><i style={{ width: '88%' }} /></span>
-      </span>
-    );
-  }
-  if (kind === 'color') {
-    return (
-      <span className="sess-art color" aria-hidden="true">
-        <span className="swatch">
-          {['#191a2c', '#46475e', '#6e6f88', '#a6a7bb', '#0A84FF', '#ececf2'].map((c) => <i key={c} style={{ background: c }} />)}
-        </span>
-      </span>
-    );
-  }
-  if (kind === 'screen') {
-    return <span className="sess-art screen" aria-hidden="true">{[0, 1, 2, 3].map((i) => <i key={i} />)}</span>;
-  }
-  if (kind === 'wire') {
-    return (
-      <span className="sess-art wire" aria-hidden="true">
-        <span className="frame"><i className="l1" /><i className="l2" /><i className="l3" /></span>
-      </span>
-    );
-  }
-  if (kind === 'motion') {
-    return (
-      <span className="sess-art motion" aria-hidden="true">
-        <span className="track"><i className="d1" /><i className="d2" /><i className="d3" /></span>
-        <span className="ticks"><em>0</em><em>150ms</em><em>300ms</em></span>
-      </span>
-    );
-  }
-  return (
-    <span className="sess-art demo" aria-hidden="true">
-      <span className="type">Demo<br />day</span>
-      <span className="stub">Live · 5:00 PM</span>
-    </span>
-  );
-}
-
-function Home({ todayKey, onOpenDay }) {
+function Home({ todayKey, onOpenSession }) {
   const done = SESSION_KEYS.filter((k) => k < todayKey);
   const last = done[done.length - 1];
   const next = SESSION_KEYS.find((k) => k >= todayKey);
@@ -498,7 +455,7 @@ function Home({ todayKey, onOpenDay }) {
             : k === last ? ['New', 'new', SparklesIcon] : null;
           return (
             <li key={k}>
-              <button type="button" className="session-card" onClick={() => onOpenDay(k)}>
+              <button type="button" className="session-card" onClick={() => onOpenSession(k)}>
                 <span className="list-no" aria-hidden="true">{pad(sessionNo(k))}</span>
                 <span className="sess-cover">
                   <span className="sess-top">
@@ -527,7 +484,7 @@ function Home({ todayKey, onOpenDay }) {
 }
 
 /* Day details: shown in the right-hand panel when a calendar day is clicked */
-function DayPanel({ dayKey, onClose, onOpenDay }) {
+function DayPanel({ dayKey, onClose, onOpenDay, onOpenPage }) {
   const toast = useToast();
   const [copied, copy] = useCopy();
   const ref = useRef(null);
@@ -580,6 +537,16 @@ function DayPanel({ dayKey, onClose, onOpenDay }) {
             <button type="button" className="glass btn" onClick={saveIcs}><Icon icon={CalendarAdd01Icon} size={18} />Add to calendar</button>
             <a className="btn primary" href={MEET_LINK} target="_blank" rel="noreferrer"><Icon icon={Video01Icon} size={18} bold />Join on Meet</a>
           </div>
+          {onOpenPage && (
+            <button type="button" className="detail-page" onClick={onOpenPage}>
+              <span className="detail-page-art" aria-hidden="true">Aa</span>
+              <span className="detail-page-text">
+                <span className="eyebrow">Session page</span>
+                <span>{SESSION_PAGES[dayKey]?.kicker}</span>
+              </span>
+              <Icon icon={ArrowRight01Icon} size={18} className="go" />
+            </button>
+          )}
         </>
       ) : (
         <div className="empty-state day-empty">
@@ -681,7 +648,12 @@ export default function App() {
   }, []);
 
   const view = nav.history[nav.pos];
-  useEffect(() => { document.title = `${VIEWS[view]} · Cohort | ${BRAND}`; }, [view]);
+  const isSession = view.startsWith('session:');
+  const sessionKey = isSession ? view.slice('session:'.length) : null;
+  useEffect(() => {
+    const name = isSession ? SESSIONS[sessionKey]?.title : VIEWS[view];
+    document.title = `${name || 'Overview'} · Cohort | ${BRAND}`;
+  }, [view, isSession, sessionKey]);
 
   const go = (v) => setNav(({ history, pos }) => {
     if (history[pos] === v) return { history, pos };
@@ -691,6 +663,16 @@ export default function App() {
   const visible = (k) => (view === 'overview' ? show[k] : view === k);
   const openDay = (key) => setPanel((cur) => (cur?.type === 'day' && cur.key === key ? null : { type: 'day', key }));
   const showDay = (key) => setPanel({ type: 'day', key });
+  const openSession = (key) => {
+    if (!SESSION_PAGES[key]) { showDay(key); return; }
+    setPanel(null);
+    go('session:' + key);
+    requestAnimationFrame(() => {
+      document.querySelector('.main')?.scrollTo?.({ top: 0 });
+      document.querySelector('.app')?.scrollTo?.({ top: 0 });
+      window.scrollTo?.({ top: 0 });
+    });
+  };
   const markOpened = (item) => setOpened((cur) => (cur.includes(item.name) ? cur : [...cur, item.name]));
   const openResource = (item) => {
     markOpened(item);
@@ -719,7 +701,7 @@ export default function App() {
 
   return (
     <ToastCtx.Provider value={toast}>
-    <div className={'app' + (!panel && view === 'overview' ? ' archive' : '')}>
+    <div className={'app' + (!panel && (view === 'overview' || isSession) ? ' archive' : '')}>
       <nav className="sidebar" aria-label="Main">
         <div className="brand">
           <a className="logo" href="/">{BRAND}</a>
@@ -733,12 +715,15 @@ export default function App() {
           {navGroups.map(([group, items]) => (
             <div key={group || 'top'} className="nav-group" role="group" aria-label={group || undefined}>
               {group && <span className="nav-label">{group}</span>}
-              {items.map(([k, label, count]) => (
-                <button key={k} type="button" className="nav-item" aria-current={view === k ? 'page' : undefined} onClick={() => go(k)}>
-                  <Icon icon={NAV_ICONS[k]} size={20} bold={view === k} /><span>{label}</span>
-                  {count !== undefined && <span className="count mono">{count}</span>}
-                </button>
-              ))}
+              {items.map(([k, label, count]) => {
+                const current = view === k || (isSession && k === 'overview');
+                return (
+                  <button key={k} type="button" className="nav-item" aria-current={current ? 'page' : undefined} onClick={() => go(k)}>
+                    <Icon icon={NAV_ICONS[k]} size={20} bold={current} /><span>{label}</span>
+                    {count !== undefined && <span className="count mono">{count}</span>}
+                  </button>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -781,20 +766,32 @@ export default function App() {
           </div>
         </div>
 
-        {view !== 'overview' && <h1 className="view-title">{VIEWS[view]}</h1>}
-        {view === 'overview' && <Home todayKey={todayKey} onOpenDay={showDay} />}
+        {view !== 'overview' && !isSession && <h1 className="view-title">{VIEWS[view]}</h1>}
+        {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
+        {isSession && SESSION_PAGES[sessionKey] && (
+          <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
+        )}
 
-        <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
-          {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
-          {visible('resources') && <Resources query={query} onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} />}
-          {visible('todos') && <Todos todos={todos} setTodos={setTodos} query={query} />}
-          {visible('tools') && <Tools />}
-        </div>
+        {!isSession && (
+          <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
+            {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
+            {visible('resources') && <Resources query={query} onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} />}
+            {visible('todos') && <Todos todos={todos} setTodos={setTodos} query={query} />}
+            {visible('tools') && <Tools />}
+          </div>
+        )}
       </main>
 
       {panel?.type === 'resource' && <DetailPanel item={panel.item} onClose={() => setPanel(null)} onSelect={(item) => setPanel({ type: 'resource', item })} />}
-      {panel?.type === 'day' && <DayPanel dayKey={panel.key} onClose={() => setPanel(null)} onOpenDay={showDay} />}
-      {!panel && view !== 'overview' && <EmptyPanel />}
+      {panel?.type === 'day' && (
+        <DayPanel
+          dayKey={panel.key}
+          onClose={() => setPanel(null)}
+          onOpenDay={showDay}
+          onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
+        />
+      )}
+      {!panel && view !== 'overview' && !isSession && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
     </div>
