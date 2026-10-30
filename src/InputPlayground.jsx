@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import './input-playground.css';
+import { EXTRA_COMPONENTS, ExtraDemo } from './PlaygroundComponents.jsx';
 
 export const INPUT_DEFAULTS = { disabled: false, errors: false, hints: true, dark: false, radius: 10, width: 402, reset: 0 };
 export function InputControls({ settings, onChange, type }) {
@@ -7,7 +8,7 @@ export function InputControls({ settings, onChange, type }) {
   return <aside className="ip-controls" aria-label="Input playground controls">
     <div className="panel-top"><span className="eyebrow">Edit component</span></div>
     {!['Segmented Control', 'Icon Buttons'].includes(type) && <label className="ip-edit-label">Display label<input value={settings.label || ''} placeholder="Default label" onChange={e => update('label', e.target.value)} /></label>}
-    {['Search', 'Text Inputs'].includes(type) && <label className="ip-edit-label">Placeholder<input value={settings.placeholder || ''} placeholder="Default placeholder" onChange={e => update('placeholder', e.target.value)} /></label>}
+    {['Search', 'Text Inputs', 'Textarea', 'Number field', 'Phone field', 'URL field', 'Autocomplete', 'Verification code', 'Password strength', 'Tag input', 'Command palette', 'Inline validation'].includes(type) && <label className="ip-edit-label">Placeholder<input value={settings.placeholder || ''} placeholder="Default placeholder" onChange={e => update('placeholder', e.target.value)} /></label>}
     <p>Try the inputs, then adjust their appearance and states.</p>
     {['disabled', 'errors', 'hints', 'dark'].map((key, i) => <label className="ip-setting" key={key}><span>{['Disable inputs', 'Show errors', 'Show helper text', 'Dark preview'][i]}</span><input type="checkbox" checked={settings[key]} onChange={e => update(key, e.target.checked)} /></label>)}
     <label className="ip-setting-range">Corner radius <output>{settings.radius}px</output><input type="range" min="0" max="20" value={settings.radius} onChange={e => update('radius', Number(e.target.value))} /></label>
@@ -18,7 +19,7 @@ export function InputControls({ settings, onChange, type }) {
 }
 const PreviewType = createContext(null);
 function Section({ title, children }) { const type = useContext(PreviewType); if (type && type !== title) return null; return <section className="ip-section"><h3>{title}</h3>{children}</section>; }
-function InputDemo({ settings, onChange, type }) {
+function LegacyDemo({ settings, onChange, type }) {
   const id = useId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,7 +49,17 @@ function InputDemo({ settings, onChange, type }) {
 }
 
 
-const INPUT_TYPES = ['Search', 'Text Inputs', 'Checkboxes', 'Radio Buttons', 'Segmented Control', 'Switches', 'Buttons', 'Icon Buttons'];
+const ORIGINAL_COMPONENTS = [
+  { name: 'Search', category: 'Fields' }, { name: 'Text Inputs', category: 'Fields' },
+  { name: 'Checkboxes', category: 'Fields' }, { name: 'Radio Buttons', category: 'Fields' },
+  { name: 'Segmented Control', category: 'Navigation' }, { name: 'Switches', category: 'Fields' },
+  { name: 'Buttons', category: 'Actions' }, { name: 'Icon Buttons', category: 'Actions' },
+];
+const COMPONENTS = [...ORIGINAL_COMPONENTS, ...EXTRA_COMPONENTS];
+function InputDemo(props) {
+  return EXTRA_COMPONENTS.some(item => item.name === props.type) ? <ExtraDemo {...props} /> : <LegacyDemo {...props} />;
+}
+
 function InputEditor({ type, settings, onChange, onClose }) {
   const ref = useRef(null);
   const closing = useRef(false);
@@ -86,17 +97,29 @@ function InputEditor({ type, settings, onChange, onClose }) {
 export default function InputPlayground({ query = '' }) {
   const [selected, setSelected] = useState(null);
   const [configs, setConfigs] = useState({});
+  const [category, setCategory] = useState('All');
+  const [search, setSearch] = useState('');
+  const [editedOnly, setEditedOnly] = useState(false);
+  const [sort, setSort] = useState('grouped');
   const settingsFor = type => configs[type] || INPUT_DEFAULTS;
   const update = type => action => setConfigs(current => ({ ...current, [type]: typeof action === 'function' ? action(current[type] || INPUT_DEFAULTS) : action }));
-  const types = INPUT_TYPES.filter(type => type.toLowerCase().includes(query.trim().toLowerCase()));
+  const matching = COMPONENTS.filter(item => [search, query].every(term => `${item.name} ${item.category}`.toLowerCase().includes(term.trim().toLowerCase())) && (!editedOnly || configs[item.name]));
+  const filtered = matching.filter(item => category === 'All' || item.category === category);
+  const types = (sort === 'az' ? [...filtered].sort((a, b) => a.name.localeCompare(b.name)) : filtered).map(item => item.name);
+  const clearFilters = () => { setSearch(''); setCategory('All'); setEditedOnly(false); setSort('grouped'); };
   return <section className="ip-gallery" aria-label="Input component gallery">
-    <p className="ip-gallery-intro">Choose a component to try it out and edit its appearance.</p>
+    <p className="ip-gallery-intro">Explore {COMPONENTS.length} components. Choose one to try it out and edit its appearance.</p>
+    <div className="pc-filters">
+      <div className="pc-filter-row"><label className="pc-search-label"><span className="sr-only">Find components</span><input type="search" placeholder="Find components…" value={search} onChange={e => setSearch(e.target.value)} /></label><label className="pc-sort">Sort<select value={sort} onChange={e => setSort(e.target.value)}><option value="grouped">Library order</option><option value="az">Name A–Z</option></select></label></div>
+      <div className="pc-categories" role="group" aria-label="Component categories">{['All', 'Fields', 'Actions', 'Navigation', 'Feedback', 'Display'].map(group => <button type="button" key={group} aria-pressed={category === group} onClick={() => setCategory(group)}>{group}<span>{matching.filter(item => group === 'All' || item.category === group).length}</span></button>)}</div>
+      <div className="pc-filter-row"><span role="status">{types.length} of {COMPONENTS.length} components</span><label className="pc-edited"><input type="checkbox" checked={editedOnly} onChange={e => setEditedOnly(e.target.checked)} />Edited only</label>{(search || category !== 'All' || editedOnly || sort !== 'grouped') && <button type="button" className="pc-clear" onClick={clearFilters}>Clear filters</button>}</div>
+    </div>
     <div className="ip-grid">{types.map(type => <article className="ip-card" key={type}>
       <div className="ip-card-preview" inert="" aria-hidden="true"><InputDemo key={settingsFor(type).reset} type={type} settings={settingsFor(type)} onChange={update(type)} /></div>
-      <div className="ip-card-caption"><h2>{type}</h2><span aria-hidden="true">↗</span></div>
+      <div className="ip-card-caption"><div><h2>{type}</h2><small>{COMPONENTS.find(item => item.name === type).category}</small></div><span aria-hidden="true">↗</span></div>
       <button type="button" className="ip-card-open" aria-label={`Edit ${type}`} onClick={() => setSelected(type)} />
     </article>)}</div>
-    {!types.length && <p>No matching inputs. Try “buttons” or “search”.</p>}
+    {!types.length && <p>No matching components. Try another category or clear your search and filters.</p>}
     {selected && <InputEditor type={selected} settings={settingsFor(selected)} onChange={update(selected)} onClose={() => setSelected(null)} />}
   </section>;
 }
