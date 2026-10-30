@@ -89,3 +89,12 @@
 .ip-dialog .ip-controls { gap: 14px; }
 .ip-dialog .ip-controls .panel-top { height: auto; }
 .ip-dialog .ip-controls > p { font-size: 12px; }
+/* Small, interruptible movement keeps the editor responsive without a pop-in. */
+.ip-dialog { opacity: 0; transform: translateY(8px) scale(.97); transition: opacity 180ms cubic-bezier(.22, 1, .36, 1), transform 180ms cubic-bezier(.22, 1, .36, 1); }
+.ip-dialog[data-motion='open'] { opacity: 1; transform: translateY(0) scale(1); transition-duration: 260ms; }
+.ip-dialog::backdrop { opacity: 0; transition: opacity 180ms cubic-bezier(.22, 1, .36, 1); }
+.ip-dialog[data-motion='open']::backdrop { opacity: 1; transition-duration: 260ms; }
+@media (prefers-reduced-motion: reduce) {
+  .ip-dialog, .ip-dialog[data-motion='open'] { transform: none; transition: none; }
+  .ip-dialog::backdrop, .ip-dialog[data-motion='open']::backdrop { transition: none; }
+}

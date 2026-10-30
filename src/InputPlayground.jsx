@@ -51,16 +51,36 @@ function InputDemo({ settings, onChange, type }) {
 const INPUT_TYPES = ['Search', 'Text Inputs', 'Checkboxes', 'Radio Buttons', 'Segmented Control', 'Switches', 'Buttons', 'Icon Buttons'];
 function InputEditor({ type, settings, onChange, onClose }) {
   const ref = useRef(null);
+  const closing = useRef(false);
+  const closeTimer = useRef(null);
+  const requestClose = () => {
+    if (closing.current) return;
+    closing.current = true;
+    const dialog = ref.current;
+    dialog.dataset.motion = 'closed';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { onClose(); return; }
+    // Keep the native modal and focus trap alive until the exit completes.
+    closeTimer.current = window.setTimeout(onClose, 200);
+  };
   useEffect(() => {
     const dialog = ref.current;
     const previous = document.activeElement;
     dialog.showModal();
-    return () => { dialog.close(); previous?.focus(); };
+    dialog.dataset.motion = 'closed';
+    // Establish the initial style before transitioning, including on older browsers.
+    dialog.getBoundingClientRect();
+    const frame = requestAnimationFrame(() => { if (!closing.current) dialog.dataset.motion = 'open'; });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(closeTimer.current);
+      dialog.close();
+      previous?.focus({ preventScroll: true });
+    };
   }, []);
-  return <dialog ref={ref} className="ip-dialog" aria-labelledby="ip-editor-title" onCancel={onClose} onClick={e => { if (e.target === ref.current) { const r = ref.current.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) onClose(); } }}>
-    <header className="ip-dialog-header"><div><span className="eyebrow">Input playground</span><h2 id="ip-editor-title">{type}</h2></div><button type="button" className="ip-close" aria-label="Close editor" onClick={onClose}>×</button></header>
+  return <dialog ref={ref} className="ip-dialog" aria-labelledby="ip-editor-title" onCancel={e => { e.preventDefault(); requestClose(); }} onClick={e => { if (e.target === ref.current) { const r = ref.current.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) requestClose(); } }}>
+    <header className="ip-dialog-header"><div><span className="eyebrow">Input playground</span><h2 id="ip-editor-title">{type}</h2></div><button type="button" className="ip-close" aria-label="Close editor" onClick={requestClose}>×</button></header>
     <div className="ip-editor-body"><div className="ip-editor-preview"><InputDemo key={settings.reset} type={type} settings={settings} onChange={onChange} /></div><InputControls type={type} settings={settings} onChange={onChange} /></div>
-    <footer className="ip-dialog-footer"><span>Changes appear in the grid.</span><button type="button" className="ip-button" onClick={onClose}>Done</button></footer>
+    <footer className="ip-dialog-footer"><span>Changes appear in the grid.</span><button type="button" className="ip-button" onClick={requestClose}>Done</button></footer>
   </dialog>;
 }
 export default function InputPlayground({ query = '' }) {
