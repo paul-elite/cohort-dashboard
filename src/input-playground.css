@@ -1,0 +1,56 @@
+.ip-stage { display: flex; justify-content: center; min-width: 0; padding-bottom: 32px; }
+.ip-preview { --ip-ink: #26262b; --ip-muted: #696a74; --ip-label: #5e5f6b; --ip-surface: #fff; --ip-fill: #f0f0f3; --ip-hair: #26262b29; max-width: 100%; background: #f7f7f8; padding: 24px; color: var(--ip-ink); border-radius: 16px; }
+.ip-preview.ip-dark { --ip-ink: #f5f5f7; --ip-muted: #aaaab7; --ip-label: #c9c9d0; --ip-surface: #28282e; --ip-fill: #34343b; --ip-hair: #ffffff40; background: #1c1c21; }
+.ip-preview header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.ip-preview h2 { font-size: 24px; font-weight: 500; line-height: 30px; letter-spacing: -.24px; }
+.ip-badge { background: var(--ip-fill); border-radius: 6px; padding: 2px 8px; font-size: 13px; line-height: 18px; color: var(--ip-label); }
+.ip-fields { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.ip-section { display: flex; flex-direction: column; gap: 12px; }
+.ip-section h3, .ip-field label { font-size: 13px; font-weight: 500; line-height: 18px; color: var(--ip-label); margin: 0; }
+.ip-search { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 12px; height: 40px; border: .5px solid var(--ip-hair); border-radius: var(--ip-radius); background: var(--ip-surface); }
+.ip-search img, .ip-icon-button img { flex: none; display: block; }
+.ip-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--ip-ink); font: inherit; }
+.ip-search kbd { display: grid; place-items: center; width: 24px; height: 24px; flex: none; border: .5px solid var(--ip-hair); border-radius: 6px; color: var(--ip-muted); background: var(--ip-surface); }
+.ip-search:focus-within kbd { visibility: hidden; }
+.ip-search:focus-within { border-color: var(--blue-ink); box-shadow: 0 0 0 .5px var(--blue-ink); }
+.ip-field { display: flex; flex-direction: column; gap: 6px; }
+.ip-field > input { width: 100%; height: 40px; padding: 0 12px; border: .5px solid var(--ip-hair); border-radius: var(--ip-radius); background: var(--ip-surface); color: var(--ip-ink); font: inherit; }
+.ip-preview input::placeholder { color: var(--ip-muted); opacity: 1; }
+.ip-field > input:hover { border-color: var(--ip-muted); }
+.ip-field > input:focus { outline: 1px solid var(--blue-ink); border-color: var(--blue-ink); }
+.ip-field > input[aria-invalid='true'] { border-color: var(--error-ink); }
+.ip-field p, .ip-choice small { color: var(--ip-muted); font-size: 13px; line-height: 18px; margin: 0; }
+.ip-field .ip-error { color: var(--error-ink); }
+.ip-choice { display: flex; gap: 12px; padding: 8px 0; cursor: pointer; line-height: 20px; }
+.ip-choice input { appearance: none; width: 18px; height: 18px; flex: none; margin: 0; border: 1px solid #d2d2da; border-radius: 5px; background: var(--ip-surface); }
+.ip-choice input[type='checkbox']:checked { background: var(--ip-ink); box-shadow: inset 0 0 0 4px var(--ip-surface); }
+.ip-choice input[type='radio'] { border-radius: 50%; }
+.ip-choice input[type='radio']:checked { border: 5px solid var(--ip-ink); }
+.ip-choice small { display: block; }
+.ip-segment { display: flex; padding: 2px; background: var(--ip-fill); border-radius: var(--ip-radius); }
+.ip-segment button { padding: 0 12px; height: 32px; background: transparent; border: .5px solid transparent; border-radius: max(0px, calc(var(--ip-radius) - 2px)); color: var(--ip-muted); font: 500 13px 'Inter', sans-serif; cursor: pointer; }
+.ip-segment button[aria-pressed='true'] { background: var(--ip-surface); border-color: var(--ip-hair); color: var(--ip-ink); box-shadow: 0 1px 2px #17181f0f; }
+.ip-switch-row { display: flex; justify-content: space-between; align-items: center; min-height: 24px; }
+.ip-switch { width: 40px; height: 24px; padding: 0; background: transparent; border: 0; cursor: pointer; flex: none; }
+.ip-switch img { display: block; }
+.ip-switch-on { display: block; width: 40px; height: 24px; border-radius: 20px; background: var(--blue-ink); padding: 2px; }
+.ip-switch-on > span { display: block; margin-left: 16px; width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 1px 2px #0003; }
+.ip-button { height: 32px; padding: 0 12px; border: .5px solid var(--ip-hair); background: var(--ip-surface); border-radius: var(--ip-radius); color: var(--ip-ink); font: 500 13px 'Inter', sans-serif; cursor: pointer; }
+.ip-primary { background: linear-gradient(#c8f94e, #a3e021); color: #141414; border: 1px solid #a8e525; box-shadow: inset 0 1px .5px #ffffff80, 0 1px 2.5px #1e24064d, 0 2px 2.5px #1e240659, 0 1px .5px #1e24062e; }
+.ip-icon-row { display: flex; gap: 12px; }
+.ip-icon-button { display: grid; place-items: center; width: 40px; height: 40px; background: transparent; border: 0; border-radius: 999px; cursor: pointer; }
+.ip-icon-button:hover { background: var(--ip-fill); }
+.ip-preview :disabled { cursor: not-allowed; opacity: .45; }
+.ip-preview button:focus-visible, .ip-choice input:focus-visible { outline: 2px solid var(--ip-muted); outline-offset: 3px; }
+.ip-feedback { min-height: 18px; font-size: 13px; line-height: 18px; color: var(--ip-muted); margin-top: 24px; }
+.ip-controls > p { color: var(--text-3); line-height: 1.7; }
+.ip-setting { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ip-setting input { accent-color: var(--blue-ink); }
+.ip-setting-range { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+.ip-setting-range input { grid-column: 1 / -1; width: 100%; accent-color: var(--blue-ink); }
+.ip-note { font-size: 12px; }
+@media (min-width: 801px) { .app.inputs-view { grid-template-columns: 240px minmax(0, 1fr) 300px; } .inputs-view .ip-controls { grid-column: auto; position: sticky; height: 100vh; } }
+@media (max-width: 800px) { .ip-controls { position: static; height: auto; } }
+.ip-section:first-child, .ip-section:has(.ip-segment) { gap: 8px; }
+.ip-choice input[type='checkbox']:checked { box-shadow: none; position: relative; }
+.ip-choice input[type='checkbox']:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid var(--ip-surface); border-width: 0 2px 2px 0; transform: rotate(45deg); }

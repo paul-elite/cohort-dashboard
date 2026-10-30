@@ -26,6 +26,21 @@ export const ANATOMY = [
   { name: 'Serif', char: 'I', category: 'Letterforms', description: 'A small finishing stroke at the end of a main stroke in a serif typeface.', example: 'In Georgia, I has serifs at the top and bottom. Sans serif faces omit them.' },
   { name: 'Terminal', char: 'a', category: 'Letterforms', description: 'The end of a stroke that does not finish in a serif.', example: 'The exposed stroke ending of a is a terminal; its shape varies by typeface.' },
   { name: 'Leg', char: 'R', category: 'Letterforms', description: 'A stroke that extends downward and away from the main body of a letter.', example: 'The diagonal lower stroke of R is its leg.' },
+  {"name": "Apex", "char": "A", "category": "Letterforms", "description": "The upper meeting point of two strokes.", "example": "Look at the top of A, where its diagonal strokes meet."},
+  {"name": "Vertex", "char": "V", "category": "Letterforms", "description": "The lower meeting point of two strokes.", "example": "The two diagonals of V meet at its bottom vertex."},
+  {"name": "Arm", "char": "E", "category": "Letterforms", "description": "A projecting stroke attached at one end and free at the other.", "example": "The horizontal strokes extending from E are arms."},
+  {"name": "Diagonal", "char": "N", "category": "Letterforms", "description": "A slanted stroke within a letter.", "example": "The central stroke of N runs diagonally between its upright stems."},
+  {"name": "Spine", "char": "S", "category": "Letterforms", "description": "The central curve that gives S its shape.", "example": "Follow the continuous curve through the middle of S."},
+  {"name": "Ear", "char": "g", "category": "Letterforms", "description": "A small projection from the upper part of a lowercase g.", "example": "In Georgia, look for the small stroke at the upper right of g."},
+  {"name": "Link", "char": "g", "category": "Letterforms", "description": "The connecting stroke between the upper and lower sections of a double-storey g.", "example": "In Georgia, the narrow link joins the upper bowl to the lower loop."},
+  {"name": "Loop", "char": "g", "category": "Letterforms", "description": "The lower enclosed section of a double-storey g.", "example": "Georgia’s g has a lower loop beneath its upper bowl. Single-storey designs differ."},
+  {"name": "Eye", "char": "e", "category": "Letterforms", "description": "The small enclosed counter in a lowercase e.", "example": "Look above the horizontal bar inside e to find its eye."},
+  {"name": "Tail", "char": "Q", "category": "Letterforms", "description": "A projecting finishing stroke, often descending from a letter.", "example": "The short diagonal that extends from Q is its tail."},
+  {"name": "Spur", "char": "G", "category": "Letterforms", "description": "A small projection from a main stroke.", "example": "Look for the small projecting detail at the lower right of Georgia’s G; its form varies by typeface."},
+  {"name": "Bracket", "char": "I", "category": "Letterforms", "description": "The curved transition between a serif and its main stroke.", "example": "In Georgia, inspect the curves where the serifs of I join its stem. Sans serif faces have no serif brackets."},
+  {"name": "Tittle", "char": "i", "category": "Letterforms", "description": "The dot above a lowercase i or j.", "example": "The separate dot above i is its tittle."},
+  {"name": "Stroke contrast", "char": "O", "category": "Letterforms", "description": "The difference between thick and thin parts of a letter’s strokes.", "example": "Compare the sides and top of Georgia’s O, then switch to Inter to compare the contrast."},
+
 ];
 
 function useMetrics(face, style, char) {
