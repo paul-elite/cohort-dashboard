@@ -13,7 +13,7 @@ import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
 import TypeAnatomy, { ANATOMY } from './TypeAnatomy.jsx';
 
-import InputPlayground, { InputControls, INPUT_DEFAULTS } from './InputPlayground.jsx';
+import InputPlayground from './InputPlayground.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -623,7 +623,6 @@ export default function App() {
   const todayKey = keyOf(new Date());
   const [nav, setNav] = useState({ history: ['overview'], pos: 0 });
   const [query, setQuery] = useState('');
-  const [inputSettings, setInputSettings] = useState(INPUT_DEFAULTS);
   const [anatomyTerm, setAnatomyTerm] = useState(ANATOMY[0]);
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
@@ -767,7 +766,7 @@ export default function App() {
 
         {view !== 'overview' && !isSession && <h1 className="view-title">{VIEWS[view]}</h1>}
         {view === 'anatomy' && <TypeAnatomy query={query} selected={anatomyTerm} onSelect={setAnatomyTerm} />}
-        {view === 'inputs' && <InputPlayground key={inputSettings.reset} settings={inputSettings} onChange={setInputSettings} />}
+        {view === 'inputs' && <InputPlayground query={query} />}
         {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
         {isSession && SESSION_PAGES[sessionKey] && (
           <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
@@ -792,7 +791,6 @@ export default function App() {
           onOpenPage={SESSION_PAGES[panel.key] && view !== 'session:' + panel.key ? () => openSession(panel.key) : null}
         />
       )}
-      {view === 'inputs' && <InputControls settings={inputSettings} onChange={setInputSettings} />}
       {!panel && view !== 'anatomy' && view !== 'inputs' && <EmptyPanel />}
 
       <Toaster toasts={toasts} onDismiss={dismiss} />
