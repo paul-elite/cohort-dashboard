@@ -11,10 +11,11 @@ import {
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
 import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
+import ElementsPage from './ElementsPage.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools' };
+const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools', elements: 'UI elements' };
 const pad = (n) => String(n).padStart(2, '0');
 const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = (k) => new Date(k + 'T12:00:00');
@@ -42,7 +43,7 @@ function save(key, value) {
 function Icon({ icon, size = 20, bold = false, ...rest }) {
   return <HugeiconsIcon icon={icon} size={size} color="currentColor" strokeWidth={bold ? 2 : 1} absoluteStrokeWidth={!bold} aria-hidden="true" focusable="false" {...rest} />;
 }
-const NAV_ICONS = { overview: DashboardSquare01Icon, calendar: Calendar03Icon, resources: Folder01Icon, todos: CheckmarkCircle02Icon, tools: Wrench01Icon };
+const NAV_ICONS = { overview: DashboardSquare01Icon, calendar: Calendar03Icon, resources: Folder01Icon, todos: CheckmarkCircle02Icon, tools: Wrench01Icon, elements: GridViewIcon };
 const KIND_ICONS = { recording: FileVideoIcon, font: TextFontIcon, audio: FileAudioIcon, zip: FileZipIcon, book: Book02Icon };
 
 function downloadIcs(key, s) {
@@ -690,6 +691,7 @@ export default function App() {
   const navGroups = [
     [null, [['overview', 'Overview']]],
     ['Cohort', [['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']]],
+    ['Reference', [['elements', 'UI elements']]],
   ];
   const layoutItems = [['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools']];
 
@@ -760,13 +762,14 @@ export default function App() {
           </div>
         </div>
 
-        {view !== 'overview' && !isSession && <h1 className="view-title">{VIEWS[view]}</h1>}
+        {view !== 'overview' && !isSession && view !== 'elements' && <h1 className="view-title">{VIEWS[view]}</h1>}
         {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
         {isSession && SESSION_PAGES[sessionKey] && (
           <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
         )}
+        {view === 'elements' && <ElementsPage />}
 
-        {!isSession && (
+        {!isSession && view !== 'elements' && (
           <div className={'cards' + (view !== 'overview' ? ' single' : '')}>
             {visible('calendar') && <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />}
             {visible('resources') && <Resources query={query} onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} />}

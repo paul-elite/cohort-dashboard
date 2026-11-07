@@ -51,6 +51,18 @@ export const SESSION_PAGES = {
       cite: "Matej Latin, Better Web Typography for a Better Web",
     },
     excerpt: "A paragraph is a balance of three things: the size of the type, the length of the line and the space between the lines. None of them can be set in isolation. Make the lines too long and the eye has too few breaks; make them too short and it has to switch too often. Set the leading too tight and the lines crowd each other; too loose and they drift apart. The three sides have to match.",
+    anatomy: {
+      lede: "Before size, measure or leading, there is the letter itself. Five horizontal lines decide how large a face looks, how much room a line needs, and whether it survives at 12 pixels. The Figma book draws them over real specimens; here they are measured from the live font in your browser.",
+      caption: "FIG. 1.1 — The five lines, measured from the live face. The pink band is the x-height: the zone where most reading happens and the strongest predictor of how a face survives small sizes.",
+      compare: [
+        { name: "Georgia", kind: "Serif", stack: "Georgia, 'Times New Roman', serif", note: "Smaller x-height, more stroke contrast. Reads classical, lighter and smaller." },
+        { name: "Inter", kind: "Sans-serif", stack: "'Inter', system-ui, sans-serif", note: "Taller x-height, little contrast. Reads modern, sturdier and larger." },
+      ],
+      points: [
+        { title: "x-height sets apparent size", body: "Two faces at the same pixel size are not the same size to the eye. A tall x-height fills more of the line, so the text looks bigger, darker and more legible at small sizes. This is why an interface face is chosen for its x-height before its personality." },
+        { title: "The line needs all five", body: "Cap height and ascenders set the top of the line; descenders set the bottom. Leading has to clear both, or a “g” collides with the line below. When a face changes, the line height has to be checked again — the pixel size did not move, but the glyphs did." },
+      ],
+    },
     specimen: {
       lede: "Two paragraphs can share a size, a colour and a leading and still not look alike. One reads heavier and larger; the other lighter and smaller. Latin opens the book with the anatomy behind that: a pixel value is a starting point, not a measure of how big type looks.",
       sample: "The quick brown fox jumps over the lazy dog. Rounded letters are drawn slightly larger so they look the same size.",

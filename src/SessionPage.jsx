@@ -144,6 +144,101 @@ function ReadingLab({ sample }) {
   );
 }
 
+/* ---------- The five lines (Chapter 1) ---------- */
+function AnatomyFigure({ anatomy }) {
+  const [face, setFace] = useState(0);
+  const stack = anatomy.compare[face].stack;
+  const [m, setM] = useState({ asc: 132, cap: 100, xh: 70, desc: 32, tw: 340 });
+
+  useEffect(() => {
+    const ctx = document.createElement('canvas').getContext('2d');
+    const size = 144;
+    ctx.font = `${size}px ${stack}`;
+    const cap = ctx.measureText('H').actualBoundingBoxAscent;
+    const xh = ctx.measureText('x').actualBoundingBoxAscent;
+    // Descenders differ per glyph (g is a loop, p is a stem), so take the deepest.
+    const desc = Math.max(
+      ...['g', 'p', 'y', 'j'].map((c) => ctx.measureText(c).actualBoundingBoxDescent),
+    );
+    const asc = Math.max(ctx.measureText('H').fontBoundingBoxAscent, cap);
+    const tw = ctx.measureText('Hxgp').width;
+    setM({ asc, cap, xh, desc, tw });
+  }, [stack]);
+
+  const baseline = Math.ceil(m.asc) + 22;
+  const height = Math.ceil(baseline + m.desc + 40);
+  const line = (y, label, side = 'left', below = false) => (
+    <g key={label}>
+      <line x1="24" x2="636" y1={y} y2={y} stroke="#E0115F" strokeWidth="1" strokeDasharray="3 3" opacity="0.62" />
+      <text
+        x={side === 'left' ? 26 : 634}
+        y={below ? y + 13 : y - 5}
+        textAnchor={side === 'left' ? 'start' : 'end'}
+        className="an-label"
+        fontSize="11.5"
+        fontWeight="500"
+        letterSpacing="0.08em"
+        fill="#6e6f88"
+        style={{ textTransform: 'uppercase' }}
+      >
+        {label}
+      </text>
+    </g>
+  );
+
+  return (
+    <figure className="sp-anatomy">
+      <div className="sp-anatomy-head">
+        <span className="sp-anatomy-fig mono">Type anatomy · live</span>
+        <div className="sp-seg" role="group" aria-label="Typeface for the anatomy figure">
+          {anatomy.compare.map((f, i) => (
+            <button key={f.name} type="button" aria-pressed={face === i} onClick={() => setFace(i)}>
+              {f.kind.replace('-serif', '')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="sp-anatomy-stage">
+        <svg viewBox={`0 0 660 ${height}`} role="img" aria-label={`The words Hxgp in ${anatomy.compare[face].name}, measured against ascender, cap height, x-height, baseline and descender lines.`}>
+          <rect x="0" y="0" width="660" height={height} rx="12" fill="#fbfbfd" />
+          <rect x="140" y={baseline - m.xh} width={Math.min(m.tw + 20, 440)} height={m.xh} fill="#FFE3EC" opacity="0.9" />
+          {line(baseline - m.asc, 'Ascender', 'right')}
+          {line(baseline - m.cap, 'Cap height')}
+          {line(baseline - m.xh, 'x-height')}
+          {line(baseline, 'Baseline')}
+          {line(baseline + m.desc, 'Descender', 'left', true)}
+          <line x1="140" x2={140 + Math.min(m.tw + 20, 440)} y1={baseline - m.xh} y2={baseline - m.xh} stroke="#F0508A" strokeWidth="1" opacity="0.55" />
+          <line x1="140" x2={140 + Math.min(m.tw + 20, 440)} y1={baseline} y2={baseline} stroke="#F0508A" strokeWidth="1" opacity="0.55" />
+          <text x="150" y={baseline} fontSize="144" fill="#191a2c" fontFamily={stack} letterSpacing="-0.02em">Hxgp</text>
+        </svg>
+      </div>
+
+      <div className="sp-anatomy-readout mono">
+        <span>x-height {Math.round(m.xh)}</span>
+        <span>cap {Math.round(m.cap)}</span>
+        <span>asc {Math.round(m.asc)}</span>
+        <span>desc {Math.round(m.desc)}</span>
+        <span>units at 144px</span>
+      </div>
+
+      <div className="sp-anatomy-compare">
+        {anatomy.compare.map((f) => (
+          <div className="sp-anatomy-face" key={f.name}>
+            <span className="sp-anatomy-face-top">
+              <b>{f.name}</b><span>{f.kind}</span>
+            </span>
+            <p style={{ fontFamily: f.stack }}>Hhnpt</p>
+            <span className="sp-anatomy-face-note">{f.note}</span>
+          </div>
+        ))}
+      </div>
+
+      <figcaption className="sp-caption">{anatomy.caption}</figcaption>
+    </figure>
+  );
+}
+
 /* ---------- Same size, different presence (Chapter 2) ---------- */
 function Specimen({ specimen }) {
   const [heights, setHeights] = useState({});
@@ -300,10 +395,31 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         <ReadingLab sample={page.excerpt} />
       </section>
 
-      <section className="sp-sec" aria-labelledby="sp-sec-3">
+      {page.anatomy && (
+        <section className="sp-sec" aria-labelledby="sp-sec-3">
+          <div className="sp-sec-head">
+            <span className="sp-num">03</span>
+            <h2 id="sp-sec-3">The parts of a letter</h2>
+            <span className="sp-chapter">Ch. 1 · Anatomy</span>
+          </div>
+          <p className="sp-lede">{page.anatomy.lede}</p>
+          <AnatomyFigure anatomy={page.anatomy} />
+          <div className="sp-pair">
+            {page.anatomy.points.map((point) => (
+              <div key={point.title}>
+                <h4>{point.title}</h4>
+                <p>{point.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="sp-source">Reference: “Typography for Product Designers”, Part I — Anatomy (Figma).</p>
+        </section>
+      )}
+
+      <section className="sp-sec" aria-labelledby="sp-sec-4">
         <div className="sp-sec-head">
-          <span className="sp-num">03</span>
-          <h2 id="sp-sec-3">Same size, different presence</h2>
+          <span className="sp-num">04</span>
+          <h2 id="sp-sec-4">Same size, different presence</h2>
           <span className="sp-chapter">Ch. 2</span>
         </div>
         <p className="sp-lede">{page.specimen.lede}</p>
@@ -318,10 +434,10 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         </div>
       </section>
 
-      <section className="sp-sec" aria-labelledby="sp-sec-4">
+      <section className="sp-sec" aria-labelledby="sp-sec-5">
         <div className="sp-sec-head">
-          <span className="sp-num">04</span>
-          <h2 id="sp-sec-4">Rhythm is horizontal and vertical</h2>
+          <span className="sp-num">05</span>
+          <h2 id="sp-sec-5">Rhythm is horizontal and vertical</h2>
           <span className="sp-chapter">Ch. 6</span>
         </div>
         <p className="sp-lede">{page.rhythm.lede}</p>
@@ -338,10 +454,10 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         <JustifyDemo demo={page.rhythm.demo} />
       </section>
 
-      <section className="sp-sec" aria-labelledby="sp-sec-5">
+      <section className="sp-sec" aria-labelledby="sp-sec-6">
         <div className="sp-sec-head">
-          <span className="sp-num">05</span>
-          <h2 id="sp-sec-5">Sizes come from a scale</h2>
+          <span className="sp-num">06</span>
+          <h2 id="sp-sec-6">Sizes come from a scale</h2>
           <span className="sp-chapter">Ch. 7 &amp; 9</span>
         </div>
         <p className="sp-lede">{page.scale.lede}</p>
@@ -356,10 +472,10 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
         </div>
       </section>
 
-      <section className="sp-sec" aria-labelledby="sp-sec-6">
+      <section className="sp-sec" aria-labelledby="sp-sec-7">
         <div className="sp-sec-head">
-          <span className="sp-num">06</span>
-          <h2 id="sp-sec-6">Five rules to keep</h2>
+          <span className="sp-num">07</span>
+          <h2 id="sp-sec-7">Five rules to keep</h2>
         </div>
         <ol className="sp-notes">
           {page.notes.map((note, i) => (
