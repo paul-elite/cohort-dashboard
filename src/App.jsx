@@ -12,11 +12,13 @@ import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TO
 import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
 import ElementsPage from './ElementsPage.jsx';
+import TypeAnatomy, { ANATOMY } from './TypeAnatomy.jsx';
+import InputPlayground from './InputPlayground.jsx';
 import { LeftRail, TopBar, SearchOverlay, Inspector, Facts, CardMenu, Block } from './Workspace.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools', elements: 'UI elements' };
+const VIEWS = { overview: 'Overview', calendar: 'Calendar', resources: 'Resources', todos: 'To-dos', tools: 'Tools', elements: 'UI elements', anatomy: 'Type anatomy', inputs: 'Input playground' };
 const pad = (n) => String(n).padStart(2, '0');
 const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = (k) => new Date(k + 'T12:00:00');
@@ -548,6 +550,7 @@ function ResourceDetails({ item }) {
 export default function App() {
   const todayKey = keyOf(new Date());
   const [nav, setNav] = useState({ history: ['overview'], pos: 0 });
+  const [anatomyTerm, setAnatomyTerm] = useState(ANATOMY[0]);
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
   const [panel, setPanel] = useState(null); // null | { type: 'resource', item } | { type: 'day', key }
@@ -563,7 +566,7 @@ export default function App() {
   useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
     const onKey = (e) => {
-      const typing = /INPUT|TEXTAREA/.test(document.activeElement?.tagName || '');
+      const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
       if (!typing && (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)))) { e.preventDefault(); setSearchOpen(true); }
       if (e.key === 'Escape' && !typing) { setPanel(null); setRailOpen(false); }
     };
@@ -664,7 +667,8 @@ export default function App() {
       { label: 'Workspace', items: [['overview', 'Overview'], ['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']]
         .map(([k, label, count]) => ({ key: k, label, count, current: view === k, onClick: () => go(k) })) },
       sessionLinks,
-      { label: 'Reference', showLabel: true, items: [{ key: 'elements', label: 'UI elements', current: view === 'elements', onClick: () => go('elements') }] },
+      { label: 'Reference', showLabel: true, items: [['elements', 'UI elements'], ['anatomy', 'Type anatomy'], ['inputs', 'Input playground']]
+        .map(([k, label]) => ({ key: k, label, current: view === k, onClick: () => { setPanel(null); go(k); } })) },
     ];
 
   const readingMeta = stats ? [{ icon: 'type', text: stats.words.toLocaleString('en-US') + ' words' }, { icon: 'clock', text: stats.mins + ' min read' }] : null;
@@ -731,7 +735,7 @@ export default function App() {
   const inspectorOpen = !!panel;
   return (
     <ToastCtx.Provider value={toast}>
-    <div className={'ws-app' + (view === 'elements' ? ' is-wide' : '')}>
+    <div className={'ws-app' + (['elements', 'anatomy', 'inputs'].includes(view) ? ' is-wide' : '')}>
       <LeftRail groups={groups} meta={leftMeta} prefs={prefs} open={railOpen} onClose={() => setRailOpen(false)} />
 
       <main className="ws-center main">
@@ -742,7 +746,9 @@ export default function App() {
             <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
           )}
           {view === 'elements' && <ElementsPage />}
-          {!isSession && view !== 'elements' && blocks.filter(([k]) => visible(k)).map(([k, node]) => (
+          {view === 'anatomy' && <Block id="blk-anatomy" title="Type anatomy" desc="The named parts of a letter, measured from the live font. Pick a term to see it drawn." wide><TypeAnatomy query="" selected={anatomyTerm} onSelect={setAnatomyTerm} /></Block>}
+          {view === 'inputs' && <Block id="blk-inputs" title="Input playground" desc="Every input in one place. Change the settings and the preview updates." wide><InputPlayground query="" /></Block>}
+          {!isSession && !['elements', 'anatomy', 'inputs'].includes(view) && blocks.filter(([k]) => visible(k)).map(([k, node]) => (
             <Block key={k} id={'blk-' + k} title={copy[k][0]} desc={copy[k][1]}>{node}</Block>
           ))}
         </div>

@@ -592,3 +592,4 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .ws-col .pv-btn { width: 62px; height: 22px; border-radius: 7px; background: var(--ws-accent); box-shadow: none; }
 .ws-col .pv-hair { height: 22px; border-radius: 16px; box-shadow: 0 0 0 0.5px #d6d9dd; }
 .ws-col .pv-key { width: 18px; height: 18px; border-radius: 6px; }
+.ws-crumbs li:not(:last-child) { flex: none; }
