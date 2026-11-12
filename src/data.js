@@ -2,6 +2,8 @@
 
 export const BRAND = 'Paulelite.me';
 export const COHORT = { name: 'DesignTales', number: 1 };
+// Name shown at the top of both workspace rails.
+export const WORKSPACE = 'DesignAtlas';
 export const MEET_LINK = 'https://meet.google.com/';
 
 export const LIVE_SESSION = {

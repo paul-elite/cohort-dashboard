@@ -132,10 +132,10 @@ const ELEMENTS = [
     dek: 'The one thing you want someone to do next, with every supporting action one step quieter.',
     live: <ButtonLive />,
     parts: [
-      { name: 'Container', spec: '40px tall · 10px radius', visual: <span className="pv-btn" /> },
-      { name: 'Label', spec: 'Inter · 15px / 500', visual: <span className="pv-type">Join</span> },
+      { name: 'Container', spec: '32px tall · 10px radius', visual: <span className="pv-btn" /> },
+      { name: 'Label', spec: 'SF Pro · 13px / 510', visual: <span className="pv-type">Join</span> },
       { name: 'Icon', spec: '18px · 2px stroke', visual: <span className="pv-icon"><Icon icon={Video01Icon} size={20} bold /></span> },
-      { name: 'Pairing', spec: '8px gap · primary + glass', visual: <span className="pv-gap"><i /><b /><i /></span> },
+      { name: 'Pairing', spec: '10px gap · blue + grey', visual: <span className="pv-gap"><i /><b /><i /></span> },
     ],
     states: [
       { label: 'Default', node: <button type="button" className="btn primary"><Icon icon={Video01Icon} size={16} bold />Join</button> },
@@ -153,10 +153,10 @@ const ELEMENTS = [
     dek: 'One field for sessions, files and to-dos. A half-pixel hairline does the framing.',
     live: <SearchLive />,
     parts: [
-      { name: 'Field', spec: '40px tall · 10px radius', visual: <span className="pv-hair" /> },
+      { name: 'Field', spec: '32px tall · full pill', visual: <span className="pv-hair" /> },
       { name: 'Hairline', spec: '0.5px · state colour', visual: <span className="pv-line" /> },
-      { name: 'Icon', spec: '18px · text-3', visual: <span className="pv-icon"><Icon icon={Search01Icon} size={20} /></span> },
-      { name: 'Shortcut', spec: '22px keycap · "/"', visual: <span className="pv-key">/</span> },
+      { name: 'Icon', spec: '12px · 1.5px stroke', visual: <span className="pv-icon"><Icon icon={Search01Icon} size={20} /></span> },
+      { name: 'Shortcut', spec: '18px keycap · "/"', visual: <span className="pv-key">/</span> },
     ],
     states: [
       { label: 'Rest', node: <div className="search"><Icon icon={Search01Icon} size={16} /><input readOnly placeholder="Search" aria-label="Rest state" /><kbd className="hint">/</kbd></div> },
@@ -176,7 +176,7 @@ const ELEMENTS = [
     live: <TagLive />,
     parts: [
       { name: 'Dot', spec: '6px · category colour', visual: <span className="pv-dot" /> },
-      { name: 'Label', spec: '10px · 0.08em tracking', visual: <span className="pv-caps">Reading</span> },
+      { name: 'Label', spec: '11px · sentence case', visual: <span className="pv-caps">Reading</span> },
       { name: 'Gap', spec: '6px dot to word', visual: <span className="pv-gap"><i /><b /><i /></span> },
       { name: 'Row', spec: '12px between tags', visual: <span className="pv-dots"><i style={{ background: '#6A45FF' }} /><i style={{ background: '#1FCB6B' }} /><i style={{ background: '#FFC21A' }} /></span> },
     ],
@@ -228,8 +228,8 @@ const ELEMENTS = [
     dek: 'A small set of views with one current. The thumb — not a colour — marks the choice.',
     live: <SegLive />,
     parts: [
-      { name: 'Track', spec: 'pill · 3px inset · fill', visual: <span className="pv-track"><i /></span> },
-      { name: 'Thumb', spec: 'white · 1px hairline', visual: <span className="pv-thumb" /> },
+      { name: 'Track', spec: '10px radius · 2px inset · #f2f2f3', visual: <span className="pv-track"><i /></span> },
+      { name: 'Thumb', spec: 'white · 0.5px ring', visual: <span className="pv-thumb" /> },
       { name: 'Option', spec: '26px tall · 12px inset', visual: <span className="pv-or">Upcoming</span> },
       { name: 'Press', spec: 'aria-pressed', visual: <span className="pv-code">aria</span> },
     ],
@@ -249,10 +249,10 @@ const ELEMENTS = [
     dek: 'The archive is a wall of covers. Each one has to identify a session before it is read.',
     live: <MiniCard />,
     parts: [
-      { name: 'Cover', spec: '0.87 ratio · 12px radius', visual: <span className="pv-cover">Aa</span> },
+      { name: 'Cover', spec: '0.87 ratio · 16px radius', visual: <span className="pv-cover">Aa</span> },
       { name: 'Issue', spec: 'pill · session number', visual: <span className="pv-issue">01</span> },
       { name: 'Tags', spec: 'dot + subject', visual: <span className="pv-dots"><i style={{ background: '#6A45FF' }} /><i style={{ background: '#1FCB6B' }} /></span> },
-      { name: 'Title', spec: '15px / 500 + date', visual: <span className="pv-title">How Humans Read</span> },
+      { name: 'Title', spec: '14px / 500 + date', visual: <span className="pv-title">How Humans Read</span> },
     ],
     states: [
       { label: 'Rest', node: <MiniCard /> },
