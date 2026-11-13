@@ -741,3 +741,12 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .ws-col .ta-terms .ta-term[aria-pressed='true'] { background: var(--ws-btn); }
 @media (max-width: 600px) { .ws-col .ta-terms .ta-term[aria-pressed='true'] { background: var(--ws-accent); } }
 .ws-col .ta-detail-panel .ta-specimen { padding: 10px 16px; }
+
+/* Boot screens (first load / load error) */
+.boot { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--ws-bg); }
+.boot-card { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.boot-title { font-size: 14px; color: var(--ws-muted); }
+.boot-body { font-size: 13px; color: var(--ws-label); }
+.boot-card .ws-btn { flex: none; margin-top: 6px; }
+.ws-btn:disabled, .btn:disabled { opacity: 0.45; cursor: default; }
+.ws-btn:disabled:active { transform: none; }

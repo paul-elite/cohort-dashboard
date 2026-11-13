@@ -6,7 +6,10 @@ Built with Vite + React, set in Geist.
 
 ## Edit content
 
-Sessions, resources, tools, the live session and the Meet link all live in `src/data.js`.
+Everything the site shows lives in Supabase (project `cohort-dashboard`) and is edited at **/admin**:
+settings (names, Meet link, live session), sessions and their long-form pages, resources, tools,
+starter to-dos and the admin list. Sign in with a magic link; only emails on the admin list can write
+(row level security enforces it). `src/data.js` is just the in-memory store the app reads from.
 
 ## Run locally
 

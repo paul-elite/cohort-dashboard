@@ -11,7 +11,11 @@ function Icon({ icon, size = 20, bold = false, ...rest }) {
   return <HugeiconsIcon icon={icon} size={size} color="currentColor" strokeWidth={bold ? 2 : 1} absoluteStrokeWidth={!bold} aria-hidden="true" focusable="false" {...rest} />;
 }
 
-const tagOf = (key, i) => SESSIONS[key].tags[i];
+// Demo tags: the named session's tag if it still exists, otherwise any session's, so
+// editing sessions in the admin never breaks this reference page.
+const NEUTRAL_TAG = { label: 'Tag', color: '#a0a7b1', ink: '#ffffff' };
+const allTags = () => Object.values(SESSIONS).flatMap((s) => s.tags || []);
+const tagOf = (key, i) => SESSIONS[key]?.tags?.[i] || allTags()[i] || allTags()[0] || NEUTRAL_TAG;
 
 /* ---------- Live specimens ---------- */
 function ButtonLive() {
@@ -93,7 +97,7 @@ function MiniCard({ hover = false, badge = null }) {
         </span>
         <span className="sess-body"><CoverArt kind="type" /></span>
         <span className="sess-tags">
-          {SESSIONS['2026-10-10'].tags.map((t) => <span key={t.label} className="sess-tag"><i style={{ background: t.color }} />{t.label}</span>)}
+          {(SESSIONS['2026-10-10']?.tags || [tagOf('2026-10-10', 0), tagOf('2026-10-10', 1)]).map((t) => <span key={t.label} className="sess-tag"><i style={{ background: t.color }} />{t.label}</span>)}
         </span>
       </span>
       <span className="session-lines">

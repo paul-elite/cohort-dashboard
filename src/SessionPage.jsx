@@ -9,7 +9,7 @@ import CoverArt from './CoverArt.jsx';
 const fromKey = (k) => new Date(k + 'T12:00:00');
 const pad = (n) => String(n).padStart(2, '0');
 const dateLine = (k) => fromKey(k).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-const SESSION_KEYS = Object.keys(SESSIONS).sort();
+const sessionKeys = () => Object.keys(SESSIONS).sort();
 
 function Icon({ icon, size = 20, bold = false, ...rest }) {
   return <HugeiconsIcon icon={icon} size={size} color="currentColor" strokeWidth={bold ? 2 : 1} absoluteStrokeWidth={!bold} aria-hidden="true" focusable="false" {...rest} />;
@@ -324,8 +324,8 @@ function ScaleRamp({ scale }) {
 export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }) {
   const page = SESSION_PAGES[dayKey];
   const s = SESSIONS[dayKey];
-  const n = SESSION_KEYS.indexOf(dayKey) + 1;
-  const nextKey = SESSION_KEYS.find((k) => k > dayKey);
+  const n = sessionKeys().indexOf(dayKey) + 1;
+  const nextKey = sessionKeys().find((k) => k > dayKey);
 
   useEffect(() => {
     // Desktop scrolls .main, tablet scrolls .app, narrow screens the window.
@@ -501,7 +501,7 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
           <button type="button" className="sp-next" onClick={() => onOpenSession(nextKey)}>
             <span className="sp-next-label">Next session</span>
             <span className="sp-next-title">{SESSIONS[nextKey].title}<Icon icon={ArrowRight01Icon} size={16} /></span>
-            <span className="sp-next-date">Session {pad(SESSION_KEYS.indexOf(nextKey) + 1)} · {dateLine(nextKey)}</span>
+            <span className="sp-next-date">Session {pad(sessionKeys().indexOf(nextKey) + 1)} · {dateLine(nextKey)}</span>
           </button>
         )}
       </footer>

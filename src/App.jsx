@@ -397,21 +397,21 @@ function SessionList({ title, exclude, onOpenDay }) {
 }
 
 /* ---------- Home: the cohort archive, one card per session (overview only) ---------- */
-const SESSION_KEYS = Object.keys(SESSIONS).sort();
-const sessionNo = (k) => SESSION_KEYS.indexOf(k) + 1;
+const sessionKeys = () => Object.keys(SESSIONS).sort();
+const sessionNo = (k) => sessionKeys().indexOf(k) + 1;
 
 /* Cover art per session, in chronological order. */
 const COVERS = ['type', 'color', 'screen', 'wire', 'motion', 'demo'];
 
 function Home({ todayKey, onOpenSession }) {
-  const done = SESSION_KEYS.filter((k) => k < todayKey);
+  const done = sessionKeys().filter((k) => k < todayKey);
   const last = done[done.length - 1];
-  const next = SESSION_KEYS.find((k) => k >= todayKey);
+  const next = sessionKeys().find((k) => k >= todayKey);
   const [mode, setMode] = useState(() => load('cohort-home-view', 'grid'));
   const [filter, setFilter] = useState('all');
   useEffect(() => save('cohort-home-view', mode), [mode]);
 
-  const keys = [...SESSION_KEYS].reverse().filter((k) => (
+  const keys = [...sessionKeys()].reverse().filter((k) => (
     filter === 'all' ? true : filter === 'done' ? k < todayKey : k >= todayKey
   ));
 
@@ -420,9 +420,9 @@ function Home({ todayKey, onOpenSession }) {
       <header className="sessions-head">
         <div>
           <h1 id="sessions-h">Sessions</h1>
-          <p>{done.length} of {SESSION_KEYS.length} complete · {COHORT.name} Cohort #{COHORT.number}</p>
+          <p>{done.length} of {sessionKeys().length} complete · {COHORT.name} Cohort #{COHORT.number}</p>
         </div>
-        <span className="count-pill" aria-label={SESSION_KEYS.length + ' sessions'}>{SESSION_KEYS.length}</span>
+        <span className="count-pill" aria-label={sessionKeys().length + ' sessions'}>{sessionKeys().length}</span>
       </header>
 
       <div className="sessions-bar">
@@ -454,7 +454,7 @@ function Home({ todayKey, onOpenSession }) {
                       : <span />}
                     <span className="sess-issue">Session {pad(sessionNo(k))}</span>
                   </span>
-                  <span className="sess-body"><CoverArt kind={COVERS[SESSION_KEYS.indexOf(k) % COVERS.length]} /></span>
+                  <span className="sess-body"><CoverArt kind={COVERS[sessionKeys().indexOf(k) % COVERS.length]} /></span>
                   <span className="sess-tags">
                     {s.tags.map((t) => <span key={t.label} className="sess-tag"><i style={{ background: t.color }} />{t.label}</span>)}
                   </span>
@@ -487,7 +487,7 @@ function DayDetails({ dayKey, onOpenDay, onOpenPage }) {
   const [copied, copy] = useCopy();
   const s = SESSIONS[dayKey];
   const d = fromKey(dayKey);
-  const next = SESSION_KEYS.find((k) => k > dayKey);
+  const next = sessionKeys().find((k) => k > dayKey);
   const isLive = LIVE_SESSION.live && dayKey === LIVE_SESSION.date && dayKey === keyOf(new Date());
   const saveIcs = () => {
     downloadIcs(dayKey, s);
@@ -647,13 +647,13 @@ export default function App() {
   }, [view]);
 
   const open = todos.filter((t) => !t.done).length;
-  const done = SESSION_KEYS.filter((k) => k < todayKey);
-  const nextKey = SESSION_KEYS.find((k) => k >= todayKey);
+  const done = sessionKeys().filter((k) => k < todayKey);
+  const nextKey = sessionKeys().find((k) => k >= todayKey);
   const shortD = (k) => fromKey(k).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   const sessionLinks = {
     label: 'Sessions', showLabel: true,
-    items: SESSION_KEYS.filter((k) => k !== sessionKey).map((k) => ({
+    items: sessionKeys().filter((k) => k !== sessionKey).map((k) => ({
       key: k, label: SESSIONS[k].title, current: false, onClick: () => openSession(k),
     })),
   };
@@ -673,7 +673,7 @@ export default function App() {
 
   const readingMeta = stats ? [{ icon: 'type', text: stats.words.toLocaleString('en-US') + ' words' }, { icon: 'clock', text: stats.mins + ' min read' }] : null;
   const leftMeta = readingMeta || [
-    { icon: 'type', text: `${done.length} of ${SESSION_KEYS.length} sessions done` },
+    { icon: 'type', text: `${done.length} of ${sessionKeys().length} sessions done` },
     { icon: 'clock', text: nextKey ? `Next: ${shortD(nextKey)}, ${SESSIONS[nextKey].time.replace(' WAT', '')}` : 'All sessions done' },
   ];
   const rightMeta = readingMeta || [
@@ -716,7 +716,7 @@ export default function App() {
 
   const searchIndex = useMemo(() => [
     ...Object.entries(VIEWS).map(([k, label]) => ({ id: 'view:' + k, group: 'Pages', label, onPick: () => go(k) })),
-    ...SESSION_KEYS.map((k) => ({ id: 'session:' + k, group: 'Sessions', label: SESSIONS[k].title, hint: shortD(k),
+    ...sessionKeys().map((k) => ({ id: 'session:' + k, group: 'Sessions', label: SESSIONS[k].title, hint: shortD(k),
       keywords: SESSIONS[k].tags.map((t) => t.label).join(' '), onPick: () => openSession(k) })),
     ...RESOURCES.map((r) => ({ id: 'res:' + r.name, group: 'Resources', label: r.name, hint: r.kind,
       onPick: () => { go('resources'); showResource(r); } })),
