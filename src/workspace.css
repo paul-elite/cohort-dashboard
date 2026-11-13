@@ -901,3 +901,7 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .fm.flat .fm-tile:hover { background: rgba(0, 0, 0, 0.035); }
 .fm.flat .fm-status { padding: 0 12px; background: transparent; }
 .is-wide .fm.flat .fm-list { min-height: 0; }
+/* No borders on the page version: spacing separates the toolbar, headers, list and status. */
+.fm.flat .fm-bar, .fm.flat .fm-head, .fm.flat .fm-status { border: 0; }
+.fm.flat .fm-bar { padding-bottom: 16px; }
+.fm.flat .fm-status { margin-top: 4px; }
