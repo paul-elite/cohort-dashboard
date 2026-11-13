@@ -584,7 +584,7 @@ export default function App() {
 
   const crumbs = isSession
     ? [{ label: 'Sessions', onClick: () => go('overview') }, { label: SESSIONS[sessionKey]?.title }]
-    : view === 'overview' ? [{ label: COHORT.name }, ]
+    : view === 'overview' ? []
       : [{ label: COHORT.name, onClick: () => go('overview') }, { label: VIEWS[view] }];
 
   const menuFor = (k) => (view === k ? null : (
@@ -616,7 +616,7 @@ export default function App() {
       <LeftRail groups={groups} open={railOpen} onClose={() => setRailOpen(false)} />
 
       <main className="ws-center main">
-        <TopBar canBack={nav.pos > 0} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
+        <TopBar canBack={nav.pos > 0 && view !== 'overview'} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
         <div className="ws-col">
           {isSession && SESSION_PAGES[sessionKey] && (
             <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />

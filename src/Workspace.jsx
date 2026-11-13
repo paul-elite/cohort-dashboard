@@ -111,10 +111,12 @@ export function TopBar({ canBack, onBack, crumbs, onSearch, onMenu }) {
     <header className="ws-top">
       <div className="ws-top-left">
         <button type="button" className="ws-menu" aria-label="Open navigation" onClick={onMenu}><WsIcon name="square-equal" /></button>
-        <button type="button" className="ws-back" disabled={!canBack} onClick={onBack}>
-          <WsIcon name="chevron" className="ws-back-ic" />Back
-        </button>
-        <ol className="ws-crumbs" aria-label="Breadcrumb">
+        {canBack && (
+          <button type="button" className="ws-back" onClick={onBack}>
+            <WsIcon name="chevron" className="ws-back-ic" />Back
+          </button>
+        )}
+        {crumbs.length > 0 && <ol className="ws-crumbs" aria-label="Breadcrumb">
           {crumbs.map((c, i) => (
             <li key={c.label + i}>
               {i > 0 && <span className="ws-sep" aria-hidden="true">/</span>}
@@ -123,7 +125,7 @@ export function TopBar({ canBack, onBack, crumbs, onSearch, onMenu }) {
                 : <span aria-current="page">{c.label}</span>}
             </li>
           ))}
-        </ol>
+        </ol>}
       </div>
       <button type="button" id="search" className="ws-search-trigger" aria-haspopup="dialog" onClick={onSearch}>
         <WsIcon name="search" />
