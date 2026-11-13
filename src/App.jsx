@@ -441,9 +441,33 @@ function ResourceDetails({ item }) {
 }
 
 /* ---------- App ---------- */
+/* ---------- Routes: every page has its own address, so a refresh stays put ---------- */
+const pathOf = (v) => (v === 'overview' ? '/' : v.startsWith('session:') ? '/sessions/' + v.slice('session:'.length) : '/' + v);
+function viewOf(pathname) {
+  const p = pathname.replace(/\/+$/, '') || '/';
+  if (p === '/') return 'overview';
+  const m = p.match(/^\/sessions\/(\d{4}-\d{2}-\d{2})$/);
+  if (m) return SESSIONS[m[1]] && SESSION_PAGES[m[1]] ? 'session:' + m[1] : null;
+  const k = p.slice(1);
+  return VIEWS[k] && k !== 'overview' ? k : null;
+}
+
 export default function App() {
   const todayKey = keyOf(new Date());
-  const [nav, setNav] = useState({ history: ['overview'], pos: 0 });
+  // The URL is the source of truth. `depth` counts in-app steps, so Back only shows when there is one.
+  const [route, setRoute] = useState(() => ({ view: viewOf(location.pathname) || 'overview', depth: history.state?.depth || 0 }));
+  useEffect(() => {
+    // Unknown addresses fall back to the lobby; known ones keep their place in history.
+    if (!viewOf(location.pathname)) history.replaceState({ depth: 0 }, '', '/' + location.search);
+    else history.replaceState({ depth: route.depth }, '', location.pathname + location.search);
+    const onPop = (e) => {
+      setRoute({ view: viewOf(location.pathname) || 'overview', depth: e.state?.depth || 0 });
+      setPanel(null);
+      requestAnimationFrame(() => { document.querySelector('.ws-center')?.scrollTo?.({ top: 0 }); window.scrollTo?.({ top: 0 }); });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [anatomyTerm, setAnatomyTerm] = useState(ANATOMY[0]);
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
   const [panel, setPanel] = useState(null); // null | { type: 'resource', item } | { type: 'day', key }
@@ -466,7 +490,7 @@ export default function App() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  const view = nav.history[nav.pos];
+  const view = route.view;
   const isSession = view.startsWith('session:');
   const sessionKey = isSession ? view.slice('session:'.length) : null;
   useEffect(() => {
@@ -479,14 +503,13 @@ export default function App() {
     window.scrollTo?.({ top: 0 });
   });
   const go = (v) => {
-    setNav(({ history, pos }) => {
-      if (history[pos] === v) return { history, pos };
-      const h = history.slice(0, pos + 1).concat(v);
-      return { history: h, pos: h.length - 1 };
-    });
+    if (v === view) return;
+    const depth = route.depth + 1;
+    history.pushState({ depth }, '', pathOf(v));
+    setRoute({ view: v, depth });
     toTop();
   };
-  const back = () => { setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) })); toTop(); };
+  const back = () => history.back();
   // The overview (homepage) holds only Resources and To-dos; the other cards live on their own pages.
   const ON_OVERVIEW = ['resources', 'todos'];
   const visible = (k) => (view === 'overview' ? ON_OVERVIEW.includes(k) : view === k);
@@ -576,11 +599,11 @@ export default function App() {
   const inspectorOpen = !!panel;
   return (
     <ToastCtx.Provider value={toast}>
-    <div className={'ws-app' + (['elements', 'anatomy', 'inputs', 'resources'].includes(view) ? ' is-wide' : '')}>
+    <div className="ws-app">
       <LeftRail groups={groups} open={railOpen} onClose={() => setRailOpen(false)} />
 
       <main className="ws-center main">
-        <TopBar canBack={nav.pos > 0 && view !== 'overview'} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
+        <TopBar canBack={route.depth > 0 && view !== 'overview'} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
         <div className="ws-col">
           {isSession && SESSION_PAGES[sessionKey] && (
             <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />

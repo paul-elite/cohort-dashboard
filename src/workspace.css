@@ -912,3 +912,8 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .fm-tile { gap: 0; }
 .fm-tile-name { margin-top: 6px; line-height: 16px; }
 .fm-tile-meta { margin-top: 2px; line-height: 14px; }
+
+/* 600px column everywhere: text is inset 12px; only cards (and controls that act like them)
+   run to the column edge, so their contents line up with the text. */
+.ws-col :is(.els-head, .el-head, .el-dek, .el-sub, .els-foot, .ip-gallery-intro) { padding-left: 12px; padding-right: 12px; }
+.ws-col .ip-gallery-intro { margin-left: 0; margin-right: 0; }
