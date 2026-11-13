@@ -54,7 +54,7 @@ export function hydrate(c) {
     if (s.page) SESSION_PAGES[s.date] = s.page;
   });
   RESOURCES.splice(0, RESOURCES.length, ...c.resources.map((r) => ({
-    id: r.id, name: r.name, kind: r.kind, icon: r.icon, href: r.href, when: relativeTime(r.added_at),
+    id: r.id, name: r.name, kind: r.kind, icon: r.icon, href: r.href, added: r.added_at, when: relativeTime(r.added_at),
   })));
   TOOLS.splice(0, TOOLS.length, ...c.tools.map((t) => ({ name: t.name, mark: t.mark, color: t.color, href: t.href })));
   DEFAULT_TODOS.splice(0, DEFAULT_TODOS.length, ...c.starter_todos.map((t, i) => ({ id: i + 1, text: t.text, done: t.done })));

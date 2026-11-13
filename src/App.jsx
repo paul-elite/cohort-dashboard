@@ -14,6 +14,7 @@ import ElementsPage from './ElementsPage.jsx';
 import TypeAnatomy, { ANATOMY } from './TypeAnatomy.jsx';
 import InputPlayground from './InputPlayground.jsx';
 import { LeftRail, TopBar, SearchOverlay, Inspector, Facts, CardMenu, Block } from './Workspace.jsx';
+import FileManager from './FileManager.jsx';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -214,31 +215,6 @@ function Calendar({ big, todayKey, onOpenDay, selectedKey }) {
   );
 }
 
-function FileArt({ icon }) {
-  const i = ICONS[icon] || ICONS.zip;
-  return <img src={i.src} width={i.w} height={i.h} alt="" />;
-}
-
-function Resources({ query, onOpen, selected, menu }) {
-  const q = query.trim().toLowerCase();
-  const items = RESOURCES.filter((r) => !q || r.name.toLowerCase().includes(q));
-  return (
-    <section className="card res" aria-labelledby="res-h">
-      <div className="card-head"><h2 id="res-h">Shared in {COHORT.name}</h2>{menu}</div>
-      <div className="files">
-        {items.map((f) => (
-          <button type="button" key={f.name} className={'file' + (selected === f.name ? ' selected' : '')} aria-pressed={selected === f.name} onClick={() => onOpen(f)} aria-label={`${f.name}, ${f.when}`}>
-            <span className="art"><FileArt icon={f.icon} /></span>
-            <span className="name">{f.name}</span>
-            <span className="when">{f.when}</span>
-          </button>
-        ))}
-      </div>
-      {items.length === 0 && <p className="empty">No resources match your search.</p>}
-    </section>
-  );
-}
-
 /* ---------- To-dos: paper card with an add flow ----------
    Add flow states: idle → editing (focused) → filled (Add enabled) → error (empty or duplicate)
    → added (new row highlights, field stays open for the next one). Esc or blur-when-empty closes. */
@@ -399,13 +375,6 @@ function SessionList({ title, exclude, onOpenDay }) {
 const sessionKeys = () => Object.keys(SESSIONS).sort();
 
 /* ---------- Inspector content ---------- */
-const VIEW_COPY = {
-  calendar: ['Calendar', 'Every session in the cohort. Pick a day to see its details on the right.'],
-  resources: ['Resources', 'Recordings, fonts, sounds and reading shared in the cohort. Select a file to see its details.'],
-  todos: ['To-dos', 'Your own checklist for the cohort. It stays in this browser.'],
-  tools: ['Tools', 'The tools we lean on between sessions.'],
-};
-
 /* Day details: shown in the inspector when a calendar day or session is picked */
 function DayDetails({ dayKey, onOpenDay, onOpenPage }) {
   const toast = useToast();
@@ -529,10 +498,6 @@ export default function App() {
     go('session:' + key);
   };
   const markOpened = (item) => setOpened((cur) => (cur.includes(item.name) ? cur : [...cur, item.name]));
-  const openResource = (item) => {
-    markOpened(item);
-    setPanel((cur) => (cur?.type === 'resource' && cur.item.name === item.name ? null : { type: 'resource', item }));
-  };
   const showResource = (item) => { markOpened(item); setPanel({ type: 'resource', item }); };
 
   const [recents, setRecents] = useState(() => load('cohort-recents', []));
@@ -601,10 +566,9 @@ export default function App() {
     ...TOOLS.map((t) => ({ id: 'tool:' + t.name, group: 'Tools', label: t.name, hint: 'Opens in a new tab', onPick: () => window.open(t.href, '_blank', 'noreferrer') })),
   ], [todos]);
 
-  const copy = VIEW_COPY;
   const blocks = [
     ['calendar', <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />],
-    ['resources', <Resources query="" onOpen={openResource} selected={panel?.type === 'resource' ? panel.item.name : null} menu={menuFor('resources')} />],
+    ['resources', <FileManager files={RESOURCES} selected={panel?.type === 'resource' ? panel.item.name : null} onSelect={showResource} compact={view === 'overview'} />],
     ['todos', <Todos todos={todos} setTodos={setTodos} query="" />],
     ['tools', <Tools menu={menuFor('tools')} />],
   ];
@@ -612,7 +576,7 @@ export default function App() {
   const inspectorOpen = !!panel;
   return (
     <ToastCtx.Provider value={toast}>
-    <div className={'ws-app' + (['elements', 'anatomy', 'inputs'].includes(view) ? ' is-wide' : '')}>
+    <div className={'ws-app' + (['elements', 'anatomy', 'inputs', 'resources'].includes(view) ? ' is-wide' : '')}>
       <LeftRail groups={groups} open={railOpen} onClose={() => setRailOpen(false)} />
 
       <main className="ws-center main">
@@ -624,8 +588,9 @@ export default function App() {
           {view === 'elements' && <ElementsPage />}
           {view === 'anatomy' && <Block id="blk-anatomy" title="Type anatomy" desc="The named parts of a letter, measured from the live font. Pick a term to see it drawn." wide><TypeAnatomy query="" selected={anatomyTerm} onSelect={setAnatomyTerm} /></Block>}
           {view === 'inputs' && <Block id="blk-inputs" title="Input playground" desc="Every input in one place. Change the settings and the preview updates." wide><InputPlayground query="" /></Block>}
+          {/* Tools and the lobby are apps, not articles: their panels sit straight in the column. */}
           {!isSession && !['elements', 'anatomy', 'inputs'].includes(view) && blocks.filter(([k]) => visible(k)).map(([k, node]) => (
-            <Block key={k} id={'blk-' + k} title={copy[k][0]} desc={copy[k][1]}>{node}</Block>
+            <div key={k} className="ws-app-panel" id={'blk-' + k}>{node}</div>
           ))}
         </div>
       </main>
