@@ -792,3 +792,9 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 }
 @media (prefers-reduced-motion: reduce) { .ws-search-field { animation: none; } }
 @media (max-width: 800px) { .ws-search-trigger { justify-content: center; } }
+
+/* Left rail 230px; the details rail keeps the file's 260px. */
+:root { --ws-rail-w: 230px; --ws-right-w: 260px; }
+.ws-right { width: var(--ws-right-w); }
+@media (max-width: 1280px) { .ws-right { width: min(300px, 88vw); } }
+@media (max-width: 800px) { .ws-right { width: 100vw; } }

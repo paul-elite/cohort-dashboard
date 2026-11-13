@@ -117,3 +117,6 @@
 .adm-app { grid-template-columns: 260px minmax(0, 1fr); }
 .adm-app .ws-right { width: min(400px, 100vw); }
 @media (max-width: 800px) { .adm-app { grid-template-columns: minmax(0, 1fr); } }
+.adm-app { --ws-rail-w: 230px; grid-template-columns: 230px minmax(0, 1fr); }
+.adm-app .ws-right { width: min(400px, 100vw); }
+@media (max-width: 800px) { .adm-app { grid-template-columns: minmax(0, 1fr); } }
