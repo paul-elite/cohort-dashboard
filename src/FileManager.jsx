@@ -173,12 +173,9 @@ export default function FileManager({ files, selected, onSelect, compact = false
       {shown.length > 0 && flat && (
         <div ref={listRef} className="fm-groups" role="listbox" aria-label="Files" onKeyDown={onKey}>
           {groups.map((g) => (
-            <section className="fm-group" key={g.label} role="group" aria-label={g.label}>
-              <header className="fm-group-head">
-                <span>{g.label}</span>
-                <span className="fm-group-count">{g.items.length}</span>
-              </header>
-              <ul className={view === 'grid' ? 'fm-grid' : 'fm-list'}>
+            <section className="fm-section" key={g.label} role="group" aria-label={g.label}>
+              <p className="fm-section-label">{g.label}</p>
+              <ul className={'fm-group ' + (view === 'grid' ? 'fm-grid' : 'fm-list')}>
                 {g.items.map(({ f, i }) => row(f, i))}
               </ul>
             </section>

@@ -937,3 +937,9 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .fm.flat .fm-group .fm-grid { padding: 2px 0 4px; }
 .fm.flat .fm-head { margin-bottom: 4px; }
 .fm.flat .fm-status { margin-top: 8px; }
+/* Section label sits above its card, in paragraph style; no counts. */
+.fm-groups { gap: 20px; }
+.fm-section { display: flex; flex-direction: column; gap: 8px; }
+.fm-section-label { padding: 0 12px; font-size: 15px; line-height: 1.4; color: var(--ws-body); }
+.fm.flat ul.fm-group.fm-list { padding: 4px; }
+.fm.flat ul.fm-group.fm-grid { padding: 8px 4px; }
