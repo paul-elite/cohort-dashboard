@@ -951,3 +951,5 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 /* Group rhythm: 28px between groups, twice that (56px) between the header and the first group. */
 .fm-groups { gap: 28px; margin-top: 56px; }
 .fm.flat .fm-head { margin-bottom: 0; }
+/* Header → first group tightened to 24px; groups stay 28px apart. */
+.fm-groups { margin-top: 24px; }
