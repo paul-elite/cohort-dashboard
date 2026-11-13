@@ -948,3 +948,6 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .fm.flat ul.fm-group.fm-list { padding: 6px 4px; }
 .fm.flat ul.fm-group.fm-grid { padding: 4px; }
 .fm.flat .fm-group .fm-tile { padding: 12px 6px; }
+/* Group rhythm: 28px between groups, twice that (56px) between the header and the first group. */
+.fm-groups { gap: 28px; margin-top: 56px; }
+.fm.flat .fm-head { margin-bottom: 0; }
