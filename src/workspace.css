@@ -775,3 +775,20 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
   .ws-app { grid-template-columns: minmax(0, 1fr); }
   .ws-right { width: 100vw; }
 }
+
+/* Search at rest is just its label, centred. Click and it becomes the field:
+   white, the blue ring, text moving to the left (the search layer). */
+.ws-search-trigger, .ws-search-trigger:hover {
+  background: transparent; box-shadow: none; justify-content: center;
+  transition: color 0.15s;
+}
+.ws-search-trigger:hover { color: var(--ws-muted); }
+.ws-search-trigger:hover .ws-ic { opacity: 0.8; }
+.ws-search-trigger kbd { display: none; }
+.ws-search-trigger:focus-visible { outline: none; color: var(--ws-muted); box-shadow: 0 0 0 0.5px var(--ws-accent); }
+.ws-search-field { animation: ws-field-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes ws-field-in {
+  from { background: transparent; box-shadow: 0 0 0 0 rgba(0, 143, 255, 0), 0 0 0 0 rgba(0, 143, 255, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .ws-search-field { animation: none; } }
+@media (max-width: 800px) { .ws-search-trigger { justify-content: center; } }
