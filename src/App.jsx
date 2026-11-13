@@ -477,7 +477,6 @@ export default function App() {
   const [nav, setNav] = useState({ history: ['overview'], pos: 0 });
   const [anatomyTerm, setAnatomyTerm] = useState(ANATOMY[0]);
   const [todos, setTodos] = useState(() => load('cohort-todos', DEFAULT_TODOS));
-  const [show, setShow] = useState(() => load('cohort-layout', { calendar: true, resources: true, todos: true, tools: false }));
   const [panel, setPanel] = useState(null); // null | { type: 'resource', item } | { type: 'day', key }
   const [searchOpen, setSearchOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
@@ -488,7 +487,6 @@ export default function App() {
   const [opened, setOpened] = useState(() => load('cohort-opened', []));
   useEffect(() => save('cohort-opened', opened), [opened]);
   useEffect(() => save('cohort-todos', todos), [todos]);
-  useEffect(() => save('cohort-layout', show), [show]);
   useEffect(() => {
     const onKey = (e) => {
       const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
@@ -522,7 +520,7 @@ export default function App() {
   const back = () => { setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) })); toTop(); };
   // The overview (homepage) holds only Resources and To-dos; the other cards live on their own pages.
   const ON_OVERVIEW = ['resources', 'todos'];
-  const visible = (k) => (view === 'overview' ? ON_OVERVIEW.includes(k) && show[k] !== false : view === k);
+  const visible = (k) => (view === 'overview' ? ON_OVERVIEW.includes(k) : view === k);
   const openDay = (key) => setPanel((cur) => (cur?.type === 'day' && cur.key === key ? null : { type: 'day', key }));
   const showDay = (key) => setPanel({ type: 'day', key });
   const openSession = (key) => {
@@ -537,6 +535,15 @@ export default function App() {
   };
   const showResource = (item) => { markOpened(item); setPanel({ type: 'resource', item }); };
 
+  const [recents, setRecents] = useState(() => load('cohort-recents', []));
+  useEffect(() => save('cohort-recents', recents), [recents]);
+  const remember = useCallback((id) => setRecents((cur) => [id, ...cur.filter((x) => x !== id)].slice(0, 12)), []);
+  useEffect(() => { if (view !== 'overview') remember(view.startsWith('session:') ? view : 'view:' + view); }, [view, remember]);
+  useEffect(() => {
+    if (panel?.type === 'resource') remember('res:' + panel.item.name);
+    if (panel?.type === 'day' && SESSIONS[panel.key]) remember('day:' + panel.key);
+  }, [panel, remember]);
+
   // Live session announcement, once per browser session
   useEffect(() => {
     if (!LIVE_SESSION.live || LIVE_SESSION.date !== todayKey) return;
@@ -549,61 +556,28 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
-  /* Session pages: "On this page" links, scroll-spy and reading stats, read from the rendered article. */
-  const [toc, setToc] = useState([]);
-  const [activeId, setActiveId] = useState(null);
-  const [stats, setStats] = useState(null);
-  useEffect(() => {
-    if (!isSession) { setToc([]); setStats(null); return undefined; }
-    const root = document.querySelector('.sp');
-    if (!root) return undefined;
-    const heads = [...root.querySelectorAll('.sp-sec h2[id]')];
-    setToc(heads.map((h) => ({ id: h.id, text: h.textContent })));
-    const words = (root.innerText || root.textContent || '').split(/\s+/).filter(Boolean).length;
-    setStats({ words, mins: Math.max(1, Math.round(words / 230)) });
-    setActiveId(heads[0]?.id || null);
-    if (typeof IntersectionObserver === 'undefined') return undefined;
-    const seen = new Map();
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => seen.set(e.target.id, e.isIntersecting));
-      const first = heads.find((h) => seen.get(h.id));
-      if (first) setActiveId(first.id);
-    }, { rootMargin: '-72px 0px -55% 0px' });
-    heads.forEach((h) => io.observe(h));
-    return () => io.disconnect();
-  }, [view]);
-
-  const open = todos.filter((t) => !t.done).length;
-  const done = sessionKeys().filter((k) => k < todayKey);
-  const nextKey = sessionKeys().find((k) => k >= todayKey);
   const shortD = (k) => fromKey(k).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-  const sessionLinks = {
-    label: 'Sessions', showLabel: true,
-    items: sessionKeys().filter((k) => k !== sessionKey).map((k) => ({
-      key: k, label: SESSIONS[k].title, current: false, onClick: () => openSession(k),
-    })),
-  };
-  const groups = isSession
-    ? [
-      { label: 'On this page', toc: true, items: toc.map((t) => ({ key: t.id, label: t.text, current: t.id === activeId,
-        onClick: () => { document.getElementById(t.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); setActiveId(t.id); } })) },
-      sessionLinks,
-    ]
-    : [
-      { label: 'Workspace', items: [['overview', 'Overview'], ['calendar', 'Calendar'], ['resources', 'Resources', RESOURCES.length], ['todos', 'To-dos', open], ['tools', 'Tools']]
-        .map(([k, label, count]) => ({ key: k, label, count, current: view === k, onClick: () => go(k) })) },
-      sessionLinks,
-      { label: 'Reference', showLabel: true, items: [['elements', 'UI elements'], ['anatomy', 'Type anatomy'], ['inputs', 'Input playground']]
-        .map(([k, label]) => ({ key: k, label, current: view === k, onClick: () => { setPanel(null); go(k); } })) },
-    ];
-
-  const readingMeta = stats ? [{ icon: 'type', text: stats.words.toLocaleString('en-US') + ' words' }, { icon: 'clock', text: stats.mins + ' min read' }] : null;
-  const leftMeta = readingMeta || [
-    { icon: 'type', text: `${done.length} of ${sessionKeys().length} sessions done` },
-    { icon: 'clock', text: nextKey ? `Next: ${shortD(nextKey)}, ${SESSIONS[nextKey].time.replace(' WAT', '')}` : 'All sessions done' },
+  /* Left rail: a basic menu, then recents. */
+  const MENU = [['overview', 'Overview'], ['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools'],
+    ['elements', 'UI elements'], ['anatomy', 'Type anatomy'], ['inputs', 'Input playground']];
+  const recentItems = recents.map((id) => {
+    const i = id.indexOf(':'); const kind = id.slice(0, i); const key = id.slice(i + 1);
+    if (kind === 'view' && VIEWS[key]) return { key: id, label: VIEWS[key], count: 'Page', current: view === key, onClick: () => { setPanel(null); go(key); } };
+    if (kind === 'session' && SESSIONS[key] && SESSION_PAGES[key]) return { key: id, label: SESSIONS[key].title, count: 'Session', current: view === id, onClick: () => openSession(key) };
+    if (kind === 'day' && SESSIONS[key]) return { key: id, label: SESSIONS[key].title, count: shortD(key), current: panel?.type === 'day' && panel.key === key, onClick: () => showDay(key) };
+    if (kind === 'res') {
+      const r = RESOURCES.find((x) => x.name === key);
+      if (r) return { key: id, label: r.name, count: 'File', current: panel?.type === 'resource' && panel.item.name === key, onClick: () => showResource(r) };
+    }
+    return null;
+  }).filter(Boolean).slice(0, 6);
+  const groups = [
+    { label: 'Menu', items: MENU.map(([k, label]) => ({ key: k, label, current: view === k, onClick: () => { setPanel(null); go(k); } })) },
+    { label: 'Recents', showLabel: true, items: recentItems, empty: 'Pages, sessions and files you open show up here.' },
   ];
-  const rightMeta = readingMeta || [
+
+  const rightMeta = [
     { icon: 'type', text: `${COHORT.name} #${COHORT.number}` },
     { icon: 'clock', text: fromKey(todayKey).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) },
   ];
@@ -613,33 +587,9 @@ export default function App() {
     : view === 'overview' ? [{ label: COHORT.name }, ]
       : [{ label: COHORT.name, onClick: () => go('overview') }, { label: VIEWS[view] }];
 
-  const layoutItems = [['resources', 'Resources'], ['todos', 'To-dos']];
-  const prefs = (
-    <div className="ws-prefs-body">
-      <p className="ws-pop-title">Show on overview</p>
-      <ul>
-        {layoutItems.map(([k, label]) => (
-          <li key={k}>
-            <label>
-              <input type="checkbox" checked={show[k]} onChange={() => setShow({ ...show, [k]: !show[k] })} />
-              <span className={'check' + (show[k] ? ' on' : '')}>{show[k] && <Icon icon={Tick02Icon} size={14} bold />}</span>
-              {label}
-            </label>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-  const hide = (k) => () => {
-    setShow((cur) => ({ ...cur, [k]: false }));
-    toast({ tone: 'info', icon: InformationCircleIcon, title: VIEWS[k] + ' hidden from overview', action: { label: 'Undo', onClick: () => setShow((cur) => ({ ...cur, [k]: true })) } });
-  };
-  const menuFor = (k) => (
-    <CardMenu label={VIEWS[k] + ' options'} items={[
-      view !== k && { label: 'Open ' + VIEWS[k], onClick: () => go(k) },
-      view === 'overview' && { label: 'Hide from overview', onClick: hide(k) },
-    ].filter(Boolean)} />
-  );
+  const menuFor = (k) => (view === k ? null : (
+    <CardMenu label={VIEWS[k] + ' options'} items={[{ label: 'Open ' + VIEWS[k], onClick: () => go(k) }]} />
+  ));
 
   const searchIndex = useMemo(() => [
     ...Object.entries(VIEWS).map(([k, label]) => ({ id: 'view:' + k, group: 'Pages', label, onPick: () => go(k) })),
@@ -663,7 +613,7 @@ export default function App() {
   return (
     <ToastCtx.Provider value={toast}>
     <div className={'ws-app' + (['elements', 'anatomy', 'inputs'].includes(view) ? ' is-wide' : '')}>
-      <LeftRail groups={groups} meta={leftMeta} prefs={prefs} open={railOpen} onClose={() => setRailOpen(false)} />
+      <LeftRail groups={groups} open={railOpen} onClose={() => setRailOpen(false)} />
 
       <main className="ws-center main">
         <TopBar canBack={nav.pos > 0} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
@@ -674,9 +624,6 @@ export default function App() {
           {view === 'elements' && <ElementsPage />}
           {view === 'anatomy' && <Block id="blk-anatomy" title="Type anatomy" desc="The named parts of a letter, measured from the live font. Pick a term to see it drawn." wide><TypeAnatomy query="" selected={anatomyTerm} onSelect={setAnatomyTerm} /></Block>}
           {view === 'inputs' && <Block id="blk-inputs" title="Input playground" desc="Every input in one place. Change the settings and the preview updates." wide><InputPlayground query="" /></Block>}
-          {view === 'overview' && !blocks.some(([k]) => visible(k)) && (
-            <p className="ws-note ws-empty-home">Resources and To-dos are both hidden. Turn them back on in Preferences, at the bottom of the left rail.</p>
-          )}
           {!isSession && !['elements', 'anatomy', 'inputs'].includes(view) && blocks.filter(([k]) => visible(k)).map(([k, node]) => (
             <Block key={k} id={'blk-' + k} title={copy[k][0]} desc={copy[k][1]}>{node}</Block>
           ))}

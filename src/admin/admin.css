@@ -113,3 +113,7 @@
 .adm-toast { padding: 10px 14px; border-radius: 12px; background: #fff; box-shadow: var(--ws-lift-shadow); font-size: 13px; color: var(--ws-value); animation: ws-pop 0.16s cubic-bezier(0.2, 0.9, 0.3, 1); }
 .adm-toast.ok::before { content: "✓"; margin-right: 8px; color: #16a34a; }
 .adm-toast.error { color: #a3122c; }
+/* Editor: hidden until an item is picked, then slides in. */
+.adm-app { grid-template-columns: 260px minmax(0, 1fr); }
+.adm-app .ws-right { width: min(400px, 100vw); }
+@media (max-width: 800px) { .adm-app { grid-template-columns: minmax(0, 1fr); } }

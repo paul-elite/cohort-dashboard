@@ -323,6 +323,14 @@ function ScaleRamp({ scale }) {
 /* ---------- The session page ---------- */
 export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }) {
   const page = SESSION_PAGES[dayKey];
+  // Reading time, measured from the rendered article.
+  const articleRef = useRef(null);
+  const [mins, setMins] = useState(null);
+  useEffect(() => {
+    const el = articleRef.current; if (!el) return;
+    const words = (el.innerText || el.textContent || '').split(/\s+/).filter(Boolean).length;
+    setMins(Math.max(1, Math.round(words / 230)));
+  }, [dayKey]);
   const s = SESSIONS[dayKey];
   const n = sessionKeys().indexOf(dayKey) + 1;
   const nextKey = sessionKeys().find((k) => k > dayKey);
@@ -337,7 +345,7 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
   if (!page || !s) return null;
 
   return (
-    <article className="sp">
+    <article className="sp" ref={articleRef}>
       <header className="sp-head">
         <div className="sp-eyebrow-row">
           <span className="sp-eyebrow">Session {pad(n)} · {dateLine(dayKey)}</span>
@@ -364,6 +372,7 @@ export default function SessionPage({ dayKey, onOpenDay, onOpenSession, onBack }
           <span>{s.time}</span>
           <span className="sp-sep" aria-hidden="true" />
           <span>{COHORT.name} Cohort #{COHORT.number}</span>
+          {mins && <><span className="sp-sep" aria-hidden="true" /><span>{mins} min read</span></>}
         </div>
 
         {page.source && <p className="sp-source">{page.source}</p>}

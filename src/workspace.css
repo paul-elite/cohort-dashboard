@@ -750,4 +750,28 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .boot-card .ws-btn { flex: none; margin-top: 6px; }
 .ws-btn:disabled, .btn:disabled { opacity: 0.45; cursor: default; }
 .ws-btn:disabled:active { transform: none; }
-.ws-empty-home { padding: 0 12px; color: var(--ws-muted); }
+.ws-group-empty { padding: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--ws-label); max-width: 190px; }
+
+/* ==========================================================================
+   Right rail: hidden until something is picked, at every width.
+   It slides in over the page; below 1281px the page frosts behind it.
+   ========================================================================== */
+.ws-app { grid-template-columns: var(--ws-rail-w) minmax(0, 1fr); }
+.ws-right {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 40; width: var(--ws-rail-w);
+  transform: translateX(100%); visibility: hidden;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), visibility 0.28s;
+  box-shadow: -1px 0 0 var(--ws-line), -16px 0 40px rgba(30, 40, 60, 0.06);
+}
+.ws-right.open { transform: none; visibility: visible; }
+.ws-close { display: inline-block; }
+@media (prefers-reduced-motion: reduce) { .ws-right { transition: none; } }
+@media (min-width: 1281px) {
+  /* The search box centres on the column, which now spans everything right of the left rail. */
+  .ws-search-box { left: calc(var(--ws-rail-w) + (100vw - var(--ws-rail-w)) / 2); }
+}
+@media (max-width: 1280px) { .ws-right { width: min(300px, 88vw); } }
+@media (max-width: 800px) {
+  .ws-app { grid-template-columns: minmax(0, 1fr); }
+  .ws-right { width: 100vw; }
+}

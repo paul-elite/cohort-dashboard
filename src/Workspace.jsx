@@ -73,6 +73,7 @@ export function LeftRail({ groups, meta, prefs, open, onClose }) {
           {groups.map((g) => (
             <div className="ws-group" key={g.label} role="group" aria-label={g.label}>
               {g.showLabel && <span className="ws-group-label">{g.label}</span>}
+              {g.items.length === 0 && g.empty && <p className="ws-group-empty">{g.empty}</p>}
               {g.items.map((it) => (
                 <button
                   key={it.key}
@@ -91,15 +92,15 @@ export function LeftRail({ groups, meta, prefs, open, onClose }) {
         </div>
       </div>
 
-      <div className="ws-rail-foot">
+      {(meta?.length > 0 || prefs) && <div className="ws-rail-foot">
         <Meta rows={meta} />
-        <div className="ws-prefs-wrap" ref={prefsRef}>
+        {prefs && <div className="ws-prefs-wrap" ref={prefsRef}>
           {prefsOpen && <div className="ws-pop" role="dialog" aria-label="Preferences">{prefs}</div>}
           <button type="button" className="ws-prefs" aria-expanded={prefsOpen} onClick={() => setPrefsOpen((v) => !v)}>
             <WsIcon name="settings" />Preferences
           </button>
-        </div>
-      </div>
+        </div>}
+      </div>}
     </nav>
   );
 }
