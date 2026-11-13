@@ -905,3 +905,10 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .fm.flat .fm-bar, .fm.flat .fm-head, .fm.flat .fm-status { border: 0; }
 .fm.flat .fm-bar { padding-bottom: 16px; }
 .fm.flat .fm-status { margin-top: 4px; }
+/* Breadcrumbs at 12px. */
+.ws-crumbs, .ws-crumbs button { font-size: 12px; }
+.ws-sep { font-size: 13px; }
+/* File tiles: icon → name is 3× name → date (6px : 2px). */
+.fm-tile { gap: 0; }
+.fm-tile-name { margin-top: 6px; line-height: 16px; }
+.fm-tile-meta { margin-top: 2px; line-height: 14px; }
