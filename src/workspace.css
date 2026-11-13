@@ -792,3 +792,15 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 }
 @media (prefers-reduced-motion: reduce) { .ws-search-field { animation: none; } }
 @media (max-width: 800px) { .ws-search-trigger { justify-content: center; } }
+
+/* Reading: a slightly wider measure and looser leading for paragraphs. */
+:root { --ws-col: 640px; }
+.ws-block-head p { max-width: none; line-height: 1.6; }
+.ws-col .sp-lede, .ws-col .sp-dek, .ws-col .ta-description { line-height: 1.7; }
+.ws-col .sp-pair p, .ws-col .sp-rhythm-col li, .ws-col .sp-notes p, .ws-col .el-dek, .ws-col .els-dek { line-height: 1.7; }
+
+/* Left rail menu: 24px regular. Recents stay small. */
+.ws-group[aria-label="Menu"] { gap: 2px; }
+.ws-group[aria-label="Menu"] .ws-link { height: 40px; font-size: 24px; font-weight: 400; line-height: 32px; letter-spacing: -0.02em; }
+.ws-group[aria-label="Menu"] .ws-link-text { max-width: 210px; }
+.ws-groups { margin-top: 40px; }
