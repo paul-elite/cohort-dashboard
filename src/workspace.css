@@ -887,3 +887,17 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 
 /* Writing pages: sandboxes (little apps inside the text) are white. */
 .ws-col :is(.sp-saccade, .sp-lab-page, .sp-specimen, .sp-anatomy, .sp-justify, .sp-scale, .sp-plate) { background: #fff; }
+
+/* Resources page: the file manager sits straight on the page background — no card. */
+.ws-col .fm.flat { display: flex; flex-direction: column; background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
+.fm.flat .fm-bar { padding: 0 0 12px; min-height: 0; border-bottom-color: var(--ws-line); }
+.fm.flat .fm-title { font-size: 18px; }
+.fm.flat .fm-head { padding: 0 12px; background: transparent; }
+.fm.flat .fm-list { padding: 4px 0; }
+.fm.flat .fm-grid { padding: 10px 0; }
+.fm.flat .fm-row:nth-child(even) { background: rgba(0, 0, 0, 0.018); }
+.fm.flat .fm-row:hover { background: rgba(0, 0, 0, 0.04); }
+.fm.flat .fm-row.on, .fm.flat .fm-row.on:nth-child(even) { background: var(--ws-accent); }
+.fm.flat .fm-tile:hover { background: rgba(0, 0, 0, 0.035); }
+.fm.flat .fm-status { padding: 0 12px; background: transparent; }
+.is-wide .fm.flat .fm-list { min-height: 0; }

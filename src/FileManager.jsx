@@ -26,7 +26,7 @@ function save(key, value) {
 const fullDate = (iso) => (iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '');
 const openFile = (f) => { if (f.href && f.href !== '#') window.open(f.href, '_blank', 'noreferrer'); };
 
-export default function FileManager({ files, selected, onSelect, compact = false }) {
+export default function FileManager({ files, selected, onSelect, compact = false, flat = false }) {
   const [view, setView] = useState(() => load('cohort-fm-view', 'list'));
   const [sort, setSort] = useState(() => load('cohort-fm-sort', { key: 'added', dir: 'desc' }));
   const [kind, setKind] = useState('all');
@@ -103,7 +103,7 @@ export default function FileManager({ files, selected, onSelect, compact = false
   );
 
   return (
-    <section className={'card fm' + (compact ? ' compact' : '')} aria-label="Resources">
+    <section className={(flat ? 'fm flat' : 'card fm') + (compact ? ' compact' : '')} aria-label="Resources">
       <div className="fm-bar">
         <div className="fm-loc">
           <span className="fm-title">Shared in {COHORT.name}</span>

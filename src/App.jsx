@@ -568,7 +568,7 @@ export default function App() {
 
   const blocks = [
     ['calendar', <Calendar big={view === 'calendar'} todayKey={todayKey} onOpenDay={openDay} selectedKey={panel?.type === 'day' ? panel.key : null} />],
-    ['resources', <FileManager files={RESOURCES} selected={panel?.type === 'resource' ? panel.item.name : null} onSelect={showResource} compact={view === 'overview'} />],
+    ['resources', <FileManager files={RESOURCES} selected={panel?.type === 'resource' ? panel.item.name : null} onSelect={showResource} compact={view === 'overview'} flat={view === 'resources'} />],
     ['todos', <Todos todos={todos} setTodos={setTodos} query="" />],
     ['tools', <Tools menu={menuFor('tools')} />],
   ];
