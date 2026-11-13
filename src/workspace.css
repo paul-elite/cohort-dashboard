@@ -750,3 +750,4 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .boot-card .ws-btn { flex: none; margin-top: 6px; }
 .ws-btn:disabled, .btn:disabled { opacity: 0.45; cursor: default; }
 .ws-btn:disabled:active { transform: none; }
+.ws-empty-home { padding: 0 12px; color: var(--ws-muted); }

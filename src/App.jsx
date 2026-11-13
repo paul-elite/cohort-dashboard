@@ -9,7 +9,6 @@ import {
   Video01Icon, Wrench01Icon, Delete02Icon, ArrowTurnBackwardIcon, InformationCircleIcon, PartyIcon,
 } from '@hugeicons/core-free-icons';
 import { BRAND, COHORT, MEET_LINK, LIVE_SESSION, SESSIONS, RESOURCES, DEFAULT_TODOS, TOOLS, SESSION_PAGES } from './data.js';
-import CoverArt from './CoverArt.jsx';
 import SessionPage from './SessionPage.jsx';
 import ElementsPage from './ElementsPage.jsx';
 import TypeAnatomy, { ANATOMY } from './TypeAnatomy.jsx';
@@ -396,82 +395,8 @@ function SessionList({ title, exclude, onOpenDay }) {
   );
 }
 
-/* ---------- Home: the cohort archive, one card per session (overview only) ---------- */
+/* ---------- Sessions in date order ---------- */
 const sessionKeys = () => Object.keys(SESSIONS).sort();
-const sessionNo = (k) => sessionKeys().indexOf(k) + 1;
-
-/* Cover art per session, in chronological order. */
-const COVERS = ['type', 'color', 'screen', 'wire', 'motion', 'demo'];
-
-function Home({ todayKey, onOpenSession }) {
-  const done = sessionKeys().filter((k) => k < todayKey);
-  const last = done[done.length - 1];
-  const next = sessionKeys().find((k) => k >= todayKey);
-  const [mode, setMode] = useState(() => load('cohort-home-view', 'grid'));
-  const [filter, setFilter] = useState('all');
-  useEffect(() => save('cohort-home-view', mode), [mode]);
-
-  const keys = [...sessionKeys()].reverse().filter((k) => (
-    filter === 'all' ? true : filter === 'done' ? k < todayKey : k >= todayKey
-  ));
-
-  return (
-    <section className="sessions" aria-labelledby="sessions-h">
-      <header className="sessions-head">
-        <div>
-          <h1 id="sessions-h">Sessions</h1>
-          <p>{done.length} of {sessionKeys().length} complete · {COHORT.name} Cohort #{COHORT.number}</p>
-        </div>
-        <span className="count-pill" aria-label={sessionKeys().length + ' sessions'}>{sessionKeys().length}</span>
-      </header>
-
-      <div className="sessions-bar">
-        <div className="sess-seg" role="group" aria-label="Filter sessions">
-          {[['all', 'All'], ['done', 'Done'], ['upcoming', 'Upcoming']].map(([k, label]) => (
-            <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}>{label}</button>
-          ))}
-        </div>
-        <div className="sess-seg view" role="group" aria-label="Session layout">
-          <button type="button" aria-pressed={mode === 'grid'} aria-label="Grid view" onClick={() => setMode('grid')}><Icon icon={GridViewIcon} size={16} /></button>
-          <button type="button" aria-pressed={mode === 'list'} aria-label="List view" onClick={() => setMode('list')}><Icon icon={ListViewIcon} size={16} /></button>
-        </div>
-      </div>
-
-      <ul className={'session-grid ' + mode}>
-        {keys.map((k) => {
-          const s = SESSIONS[k];
-          const badge = k === next
-            ? ['Next', 'next', SparklesIcon]
-            : k === last ? ['New', 'new', SparklesIcon] : null;
-          return (
-            <li key={k}>
-              <button type="button" className="session-card" onClick={() => onOpenSession(k)}>
-                <span className="list-no" aria-hidden="true">{pad(sessionNo(k))}</span>
-                <span className="sess-cover">
-                  <span className="sess-top">
-                    {badge
-                      ? <span className={'sess-badge ' + badge[1]}><Icon icon={badge[2]} size={13} bold />{badge[0]}</span>
-                      : <span />}
-                    <span className="sess-issue">Session {pad(sessionNo(k))}</span>
-                  </span>
-                  <span className="sess-body"><CoverArt kind={COVERS[sessionKeys().indexOf(k) % COVERS.length]} /></span>
-                  <span className="sess-tags">
-                    {s.tags.map((t) => <span key={t.label} className="sess-tag"><i style={{ background: t.color }} />{t.label}</span>)}
-                  </span>
-                </span>
-                <span className="session-lines">
-                  <span className="session-name">{s.title}</span>
-                  <span className="session-sub">{fromKey(k).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} · {s.time}</span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      {keys.length === 0 && <p className="sessions-empty">Nothing here yet.</p>}
-    </section>
-  );
-}
 
 /* ---------- Inspector content ---------- */
 const VIEW_COPY = {
@@ -595,7 +520,9 @@ export default function App() {
     toTop();
   };
   const back = () => { setNav((n) => ({ ...n, pos: Math.max(0, n.pos - 1) })); toTop(); };
-  const visible = (k) => (view === 'overview' ? show[k] : view === k);
+  // The overview (homepage) holds only Resources and To-dos; the other cards live on their own pages.
+  const ON_OVERVIEW = ['resources', 'todos'];
+  const visible = (k) => (view === 'overview' ? ON_OVERVIEW.includes(k) && show[k] !== false : view === k);
   const openDay = (key) => setPanel((cur) => (cur?.type === 'day' && cur.key === key ? null : { type: 'day', key }));
   const showDay = (key) => setPanel({ type: 'day', key });
   const openSession = (key) => {
@@ -686,7 +613,7 @@ export default function App() {
     : view === 'overview' ? [{ label: COHORT.name }, ]
       : [{ label: COHORT.name, onClick: () => go('overview') }, { label: VIEWS[view] }];
 
-  const layoutItems = [['calendar', 'Calendar'], ['resources', 'Resources'], ['todos', 'To-dos'], ['tools', 'Tools']];
+  const layoutItems = [['resources', 'Resources'], ['todos', 'To-dos']];
   const prefs = (
     <div className="ws-prefs-body">
       <p className="ws-pop-title">Show on overview</p>
@@ -741,13 +668,15 @@ export default function App() {
       <main className="ws-center main">
         <TopBar canBack={nav.pos > 0} onBack={back} crumbs={crumbs} onSearch={() => setSearchOpen(true)} onMenu={() => setRailOpen(true)} />
         <div className="ws-col">
-          {view === 'overview' && <Home todayKey={todayKey} onOpenSession={openSession} />}
           {isSession && SESSION_PAGES[sessionKey] && (
             <SessionPage dayKey={sessionKey} onOpenDay={showDay} onOpenSession={openSession} onBack={() => go('overview')} />
           )}
           {view === 'elements' && <ElementsPage />}
           {view === 'anatomy' && <Block id="blk-anatomy" title="Type anatomy" desc="The named parts of a letter, measured from the live font. Pick a term to see it drawn." wide><TypeAnatomy query="" selected={anatomyTerm} onSelect={setAnatomyTerm} /></Block>}
           {view === 'inputs' && <Block id="blk-inputs" title="Input playground" desc="Every input in one place. Change the settings and the preview updates." wide><InputPlayground query="" /></Block>}
+          {view === 'overview' && !blocks.some(([k]) => visible(k)) && (
+            <p className="ws-note ws-empty-home">Resources and To-dos are both hidden. Turn them back on in Preferences, at the bottom of the left rail.</p>
+          )}
           {!isSession && !['elements', 'anatomy', 'inputs'].includes(view) && blocks.filter(([k]) => visible(k)).map(([k, node]) => (
             <Block key={k} id={'blk-' + k} title={copy[k][0]} desc={copy[k][1]}>{node}</Block>
           ))}
