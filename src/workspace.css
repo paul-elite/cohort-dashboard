@@ -820,3 +820,10 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .ws-search-layer, .ws-search-field { animation: none; }
 .ws-search-layer.closing { pointer-events: none; }
 .ws-search-move { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; will-change: transform; }
+
+/* Left rail links at 15px (menu and recents). Group labels and the brand stay small. */
+.ws-left .ws-link { height: 32px; font-size: 15px; line-height: 20px; letter-spacing: 0; }
+.ws-left .ws-group { gap: 2px; }
+.ws-left .ws-link-text { max-width: 178px; }
+.ws-left .ws-count { font-size: 12px; letter-spacing: 0; }
+.ws-left .ws-count { flex: none; white-space: nowrap; }
