@@ -917,3 +917,7 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
    run to the column edge, so their contents line up with the text. */
 .ws-col :is(.els-head, .el-head, .el-dek, .el-sub, .els-foot, .ip-gallery-intro) { padding-left: 12px; padding-right: 12px; }
 .ws-col .ip-gallery-intro { margin-left: 0; margin-right: 0; }
+/* Resources page: title, column headers, file icons and status share one left edge (12px in);
+   only the row highlights run to the column edge. */
+.fm.flat .fm-bar { padding-left: 12px; padding-right: 4px; }
+.fm.flat .fm-grid { padding-left: 0; padding-right: 0; }
