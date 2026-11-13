@@ -12,6 +12,21 @@ import { COHORT } from './data.js';
 const ART = { recording: '/icons/recording.svg', font: '/icons/font.svg', audio: '/icons/audio.svg', zip: '/icons/zip.svg', book: '/icons/book.svg' };
 const KINDS = [['all', 'All kinds'], ['recording', 'Videos'], ['font', 'Fonts'], ['audio', 'Audio'], ['zip', 'Archives'], ['book', 'Books']];
 const SORTS = { name: 'Name', kind: 'Kind', added: 'Date added' };
+const KIND_LABEL = Object.fromEntries(KINDS);
+const kindOf = (f) => KIND_LABEL[f.icon] || f.kind || 'Other';
+
+/* Date sections, newest first: Today · Yesterday · Earlier this week · Earlier this month · Older. */
+const DAY = 86400000;
+function dateBucket(iso) {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const t = new Date(iso || 0).getTime();
+  if (t >= start) return 'Today';
+  if (t >= start - DAY) return 'Yesterday';
+  if (t >= start - 6 * DAY) return 'Earlier this week';
+  if (t >= start - 29 * DAY) return 'Earlier this month';
+  return 'Older';
+}
 
 function Icon({ icon, size = 16 }) {
   return <HugeiconsIcon icon={icon} size={size} color="currentColor" strokeWidth={1.5} aria-hidden="true" focusable="false" />;
@@ -35,7 +50,9 @@ export default function FileManager({ files, selected, onSelect, compact = false
 
   const shown = useMemo(() => {
     const list = files.filter((f) => kind === 'all' || f.icon === kind);
-    const val = (f) => (sort.key === 'added' ? new Date(f.added || 0).getTime() : String(f[sort.key] || '').toLowerCase());
+    const val = (f) => (sort.key === 'added' ? new Date(f.added || 0).getTime()
+      : sort.key === 'kind' ? `${kindOf(f)} ${f.name}`.toLowerCase()
+        : String(f.name || '').toLowerCase());
     list.sort((a, b) => {
       const x = val(a); const y = val(b);
       const c = x < y ? -1 : x > y ? 1 : 0;
@@ -43,6 +60,21 @@ export default function FileManager({ files, selected, onSelect, compact = false
     });
     return list;
   }, [files, kind, sort]);
+
+  // On the Resources page the files are split into sections by the sort: date buckets, kinds,
+  // or one "All files" section for A–Z. Sections hold consecutive runs of `shown`, so the DOM
+  // order still matches it and keyboard selection runs straight through them.
+  const groups = useMemo(() => {
+    if (!flat) return [{ label: null, items: shown.map((f, i) => ({ f, i })) }];
+    const by = sort.key === 'added' ? (f) => dateBucket(f.added) : sort.key === 'kind' ? kindOf : () => 'All files';
+    const out = [];
+    shown.forEach((f, i) => {
+      const label = by(f);
+      const last = out[out.length - 1];
+      if (last && last.label === label) last.items.push({ f, i }); else out.push({ label, items: [{ f, i }] });
+    });
+    return out;
+  }, [flat, shown, sort.key]);
 
   const setSortKey = (key) => setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'added' ? 'desc' : 'asc' }));
 
@@ -133,11 +165,27 @@ export default function FileManager({ files, selected, onSelect, compact = false
           {head('name', 'Name')}{head('kind', 'Kind')}{head('added', 'Date added')}
         </div>
       )}
-      {shown.length > 0 ? (
+      {shown.length > 0 && !flat && (
         <ul ref={listRef} className={view === 'grid' ? 'fm-grid' : 'fm-list'} role="listbox" aria-label="Files" onKeyDown={onKey}>
           {shown.map(row)}
         </ul>
-      ) : (
+      )}
+      {shown.length > 0 && flat && (
+        <div ref={listRef} className="fm-groups" role="listbox" aria-label="Files" onKeyDown={onKey}>
+          {groups.map((g) => (
+            <section className="fm-group" key={g.label} role="group" aria-label={g.label}>
+              <header className="fm-group-head">
+                <span>{g.label}</span>
+                <span className="fm-group-count">{g.items.length}</span>
+              </header>
+              <ul className={view === 'grid' ? 'fm-grid' : 'fm-list'}>
+                {g.items.map(({ f, i }) => row(f, i))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+      {shown.length === 0 && (
         <p className="fm-empty">{files.length ? 'No files of this kind.' : 'No files shared yet.'}</p>
       )}
 

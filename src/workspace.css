@@ -921,3 +921,19 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
    only the row highlights run to the column edge. */
 .fm.flat .fm-bar { padding-left: 12px; padding-right: 4px; }
 .fm.flat .fm-grid { padding-left: 0; padding-right: 0; }
+
+/* Resources page: files in white section cards (by date, kind, or A–Z), stacked.
+   Card edge = column edge; icons, names and the column headers stay on the 12px text line. */
+.fm-groups { display: flex; flex-direction: column; gap: 12px; outline: none; }
+.fm-group { padding: 4px 4px 6px; border-radius: 16px; background: #fff; box-shadow: var(--ws-card-shadow); }
+.fm-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 8px 6px; }
+.fm-group-head > span:first-child { font-size: 13px; font-weight: 500; color: var(--ws-ink); }
+.fm-group-count { font-size: 11px; color: var(--ws-label); font-variant-numeric: tabular-nums; }
+.fm.flat .fm-group .fm-list { padding: 0; }
+.fm.flat .fm-group .fm-row { padding: 0 8px; }
+.fm.flat .fm-group .fm-row:nth-child(even) { background: #fafafa; }
+.fm.flat .fm-group .fm-row:hover { background: #f3f4f6; }
+.fm.flat .fm-group .fm-row.on, .fm.flat .fm-group .fm-row.on:nth-child(even) { background: var(--ws-accent); }
+.fm.flat .fm-group .fm-grid { padding: 2px 0 4px; }
+.fm.flat .fm-head { margin-bottom: 4px; }
+.fm.flat .fm-status { margin-top: 8px; }
