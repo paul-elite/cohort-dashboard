@@ -798,3 +798,20 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .ws-right { width: var(--ws-right-w); }
 @media (max-width: 1280px) { .ws-right { width: min(300px, 88vw); } }
 @media (max-width: 800px) { .ws-right { width: 100vw; } }
+
+/* ==========================================================================
+   Desktop: the details rail always has its column, empty until something is
+   picked, and the reading column sits on the exact centre of the screen.
+   The pane is offset by the difference between the two rails (260 − 230).
+   ========================================================================== */
+@media (min-width: 1281px) {
+  .ws-app { grid-template-columns: var(--ws-rail-w) minmax(0, 1fr) var(--ws-right-w); }
+  .ws-center { padding-left: calc(var(--ws-right-w) - var(--ws-rail-w)); }
+  .ws-right {
+    position: sticky; top: 0; height: 100vh; grid-column: 3; width: auto; z-index: auto;
+    transform: none; opacity: 0; visibility: hidden; box-shadow: none; border-left: 0;
+    transition: opacity 0.2s ease-out, visibility 0.2s;
+  }
+  .ws-right.open { opacity: 1; visibility: visible; border-left: 1px solid var(--ws-line); }
+  .ws-search-box { left: 50%; }
+}
