@@ -804,3 +804,7 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
 .ws-group[aria-label="Menu"] .ws-link { height: 40px; font-size: 24px; font-weight: 400; line-height: 32px; letter-spacing: -0.02em; }
 .ws-group[aria-label="Menu"] .ws-link-text { max-width: 210px; }
 .ws-groups { margin-top: 40px; }
+
+/* Canvas at 99% lightness. */
+:root { --ws-bg: hsl(0 0% 99%); }
+.ws-top { background: linear-gradient(180deg, rgba(252, 252, 252, 0.92) 0%, rgba(252, 252, 252, 0.72) 62%, rgba(252, 252, 252, 0) 100%); }
