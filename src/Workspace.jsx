@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { WORKSPACE } from './data.js';
 
 /* ==========================================================================
@@ -145,13 +145,18 @@ export function SearchOverlay({ open, onClose, index, onPick }) {
   const [recent, setRecent] = useState(() => load(RECENT_KEY, []));
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const layerRef = useRef(null);
+  const fieldRef = useRef(null);
+  const moveRef = useRef(null);
+  const [mounted, setMounted] = useState(open);
+  const closingRef = useRef(null);
 
+  // Where focus goes back to when search closes (set as it opens).
+  const backRef = useRef(null);
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) return;
     setQ(''); setActive(0);
-    const back = document.activeElement;
-    const id = requestAnimationFrame(() => inputRef.current?.focus());
-    return () => { cancelAnimationFrame(id); back?.focus?.({ preventScroll: true }); };
+    backRef.current = document.activeElement;
   }, [open]);
   useEffect(() => save(RECENT_KEY, recent), [recent]);
 
@@ -181,7 +186,62 @@ export function SearchOverlay({ open, onClose, index, onPick }) {
     listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [active]);
 
-  if (!open) return null;
+  /* The resting label and the field are one element in two states. Opening slides the
+     icon + placeholder from where the label sat to the field's left edge while the fill,
+     ring and frost come up; closing runs the same thing backwards. */
+  const trigger = () => document.querySelector('.ws-search-trigger');
+  const reduce = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(0.2, 0.9, 0.3, 1)';
+  const FIELD_ON = { backgroundColor: 'rgb(255, 255, 255)', boxShadow: '0 0 0 0.5px rgb(0, 143, 255), 0 1px 4px 1px rgba(0, 143, 255, 0.15)' };
+  const FIELD_OFF = { backgroundColor: 'rgba(255, 255, 255, 0)', boxShadow: '0 0 0 0.5px rgba(0, 143, 255, 0), 0 1px 4px 1px rgba(0, 143, 255, 0)' };
+  const LAYER_ON = { backgroundColor: 'rgba(241, 242, 243, 0.66)', backdropFilter: 'blur(5px)' };
+  const LAYER_OFF = { backgroundColor: 'rgba(241, 242, 243, 0)', backdropFilter: 'blur(0px)' };
+
+  const offset = () => {
+    const from = trigger()?.querySelector('.ws-ic')?.getBoundingClientRect();
+    const to = moveRef.current?.querySelector('.ws-ic')?.getBoundingClientRect();
+    if (!from || !to) return 'none';
+    return `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
+  };
+
+  useEffect(() => { if (open) { clearTimeout(closingRef.current); setMounted(true); } }, [open]);
+
+  useLayoutEffect(() => {
+    if (!mounted) return;
+    const tr = trigger();
+    if (open) {
+      if (tr) tr.style.visibility = 'hidden';
+      inputRef.current?.focus({ preventScroll: true });
+      if (reduce()) return;
+      const o = { duration: 320, easing: EASE };
+      moveRef.current?.animate([{ transform: offset() }, { transform: 'none' }], o);
+      fieldRef.current?.animate([FIELD_OFF, FIELD_ON], { duration: 240, easing: 'ease-out' });
+      fieldRef.current?.querySelector('kbd')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 140, fill: 'backwards' });
+      layerRef.current?.animate([LAYER_OFF, LAYER_ON], { duration: 260, easing: 'ease-out' });
+      listRef.current?.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, delay: 90, easing: EASE, fill: 'backwards' });
+      return;
+    }
+    // Closing: play it back, then unmount and hand the label back.
+    const done = () => {
+      if (tr) tr.style.visibility = '';
+      setMounted(false);
+      const back = backRef.current;
+      requestAnimationFrame(() => { if (back && document.contains(back)) back.focus?.({ preventScroll: true }); });
+    };
+    if (reduce()) { done(); return; }
+    const o = { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.6, 1)', fill: 'forwards' };
+    listRef.current?.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 140, easing: 'ease-in', fill: 'forwards' });
+    fieldRef.current?.querySelector('kbd')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, fill: 'forwards' });
+    if (!inputRef.current?.value) moveRef.current?.animate([{ transform: 'none' }, { transform: offset() }], o);
+    else moveRef.current?.animate([{ opacity: 1 }, { opacity: 0 }], o);
+    fieldRef.current?.animate([FIELD_ON, FIELD_OFF], o);
+    layerRef.current?.animate([LAYER_ON, LAYER_OFF], o);
+    closingRef.current = setTimeout(done, 210);
+  }, [mounted, open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => () => { clearTimeout(closingRef.current); const tr = trigger(); if (tr) tr.style.visibility = ''; }, []);
+
+  if (!mounted) return null;
 
   const remember = (text) => setRecent((cur) => [text, ...cur.filter((r) => r.toLowerCase() !== text.toLowerCase())].slice(0, 5));
   const pick = (item) => {
@@ -217,9 +277,10 @@ export function SearchOverlay({ open, onClose, index, onPick }) {
   );
 
   return (
-    <div className="ws-search-layer" role="dialog" aria-modal="true" aria-label="Search" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div ref={layerRef} className={'ws-search-layer' + (open ? '' : ' closing')} role="dialog" aria-modal="true" aria-label="Search" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="ws-search-box" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-        <div className="ws-search-field">
+        <div className="ws-search-field" ref={fieldRef}>
+          <span className="ws-search-move" ref={moveRef}>
           <WsIcon name="search" />
           <input
             ref={inputRef}
@@ -236,6 +297,7 @@ export function SearchOverlay({ open, onClose, index, onPick }) {
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKey}
           />
+          </span>
           <kbd aria-hidden="true">esc</kbd>
         </div>
 

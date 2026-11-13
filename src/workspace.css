@@ -815,3 +815,8 @@ body { background: var(--ws-bg); color: var(--ws-ink); }
   .ws-right.open { opacity: 1; visibility: visible; border-left: 1px solid var(--ws-line); }
   .ws-search-box { left: 50%; }
 }
+
+/* Search transition is driven from SearchOverlay (Web Animations); drop the CSS pop-ins. */
+.ws-search-layer, .ws-search-field { animation: none; }
+.ws-search-layer.closing { pointer-events: none; }
+.ws-search-move { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; will-change: transform; }
